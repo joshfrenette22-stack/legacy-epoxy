@@ -1,5 +1,6 @@
 import Nav from "@/components/Nav";
 import HeroCanvas from "@/components/HeroCanvas";
+import ChemTecSection from "@/components/ChemTecSection";
 import StatRow from "@/components/StatRow";
 import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
@@ -16,6 +17,7 @@ export default function Home() {
       <Nav />
       <main>
         <HeroCanvas />
+        <ChemTecSection />
         <StatRow />
         <Features />
         <HowItWorks />
