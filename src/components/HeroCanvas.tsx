@@ -6,116 +6,97 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const TOTAL_FRAMES = 169;
-const frameSrc = (i: number) =>
-  `/frames/frame_${String(i).padStart(3, "0")}.jpg`;
-
+const TOTAL = 169;
+const src = (i: number) => `/frames/frame_${String(i).padStart(3, "0")}.jpg`;
 const PHONE = "9705551234"; // TODO: replace with real number
 
 export default function HeroCanvas() {
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const headline1Ref = useRef<HTMLDivElement>(null);
-  const headline2Ref = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const frameRef = useRef(0);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  const h1Ref = useRef<HTMLDivElement>(null);
+  const h2Ref = useRef<HTMLDivElement>(null);
+  const imgs = useRef<HTMLImageElement[]>([]);
+  const frame = useRef(0);
+  const rafId = useRef(0);
+  const [ready, setReady] = useState(false);
+  const [reduced, setReduced] = useState(false);
 
-  // Check reduced motion
+  // Detect prefers-reduced-motion
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mq.matches);
-    const h = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    setReduced(mq.matches);
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches);
     mq.addEventListener("change", h);
     return () => mq.removeEventListener("change", h);
   }, []);
 
-  // Preload frames
+  // Preload every frame, decode in parallel
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reduced) return;
+    let n = 0;
+    const arr: HTMLImageElement[] = [];
 
-    const imgs: HTMLImageElement[] = [];
-    let count = 0;
-
-    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+    for (let i = 1; i <= TOTAL; i++) {
       const img = new Image();
-      img.src = frameSrc(i);
-      img.decode?.().catch(() => {});
-      const done = () => {
-        count++;
-        // Draw first frame as soon as possible
-        if (i === 1 && canvasRef.current) {
-          sizeAndDraw(0);
-        }
-        if (count >= TOTAL_FRAMES) setLoaded(true);
+      img.src = src(i);
+      arr.push(img);
+
+      const tick = () => {
+        n++;
+        // Show canvas as soon as frame 1 is ready
+        if (i === 1) draw(0);
+        if (n >= TOTAL) setReady(true);
       };
-      img.onload = done;
-      img.onerror = done;
-      imgs.push(img);
+      // decode() is faster than onload for preloading
+      img.decode().then(tick, tick);
     }
-    imagesRef.current = imgs;
-  }, [reducedMotion]);
+    imgs.current = arr;
+  }, [reduced]);
 
-  function sizeAndDraw(index: number) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const img = imagesRef.current[index];
-    if (!img?.complete) return;
-
-    // Size canvas to viewport at device pixel ratio for sharpness
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const cw = vw * dpr;
-    const ch = vh * dpr;
-
-    if (canvas.width !== cw || canvas.height !== ch) {
-      canvas.width = cw;
-      canvas.height = ch;
-      canvas.style.width = vw + "px";
-      canvas.style.height = vh + "px";
+  // Draw: blit at native resolution — no scaling, no clearing needed
+  function draw(index: number) {
+    if (!ctxRef.current) {
+      const c = canvasRef.current;
+      if (!c) return;
+      const ctx = c.getContext("2d", { alpha: false });
+      if (!ctx) return;
+      ctxRef.current = ctx;
     }
+    const img = imgs.current[index];
+    if (!img?.naturalWidth) return;
 
-    // Draw with "cover" fit — fill canvas, center-crop overflow
-    const iw = img.naturalWidth;
-    const ih = img.naturalHeight;
-    const scale = Math.max(cw / iw, ch / ih);
-    const sw = iw * scale;
-    const sh = ih * scale;
-    const dx = (cw - sw) / 2;
-    const dy = (ch - sh) / 2;
-
-    ctx.drawImage(img, dx, dy, sw, sh);
-    frameRef.current = index;
+    const c = canvasRef.current!;
+    // Set canvas intrinsic size to match image (once)
+    if (c.width !== img.naturalWidth) {
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+    }
+    ctxRef.current!.drawImage(img, 0, 0);
+    frame.current = index;
   }
 
-  // Resize handler
-  useEffect(() => {
-    if (reducedMotion) return;
-    const onResize = () => {
-      if (imagesRef.current.length) sizeAndDraw(frameRef.current);
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [reducedMotion]);
+  // Schedule a draw on next animation frame (debounced)
+  function requestDraw(index: number) {
+    if (index === frame.current) return;
+    cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => draw(index));
+  }
 
-  // GSAP scroll animation
+  // GSAP scroll timeline
   useEffect(() => {
-    if (reducedMotion || !loaded) return;
-    const section = sectionRef.current;
-    const h1 = headline1Ref.current;
-    const h2 = headline2Ref.current;
-    if (!section || !h1 || !h2) return;
+    if (reduced || !ready) return;
+    const pin = pinRef.current;
+    const h1 = h1Ref.current;
+    const h2 = h2Ref.current;
+    if (!pin || !h1 || !h2) return;
 
     const ctx = gsap.context(() => {
-      const obj = { f: 0 };
+      const o = { f: 0 };
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: section,
+          trigger: pin,
           start: "top top",
           end: "+=250%",
           pin: true,
@@ -124,39 +105,28 @@ export default function HeroCanvas() {
         },
       });
 
-      // Frame scrub
-      tl.to(obj, {
-        f: TOTAL_FRAMES - 1,
+      // Scrub frames
+      tl.to(o, {
+        f: TOTAL - 1,
         ease: "none",
         onUpdate() {
-          const idx = Math.round(obj.f);
-          if (idx !== frameRef.current) sizeAndDraw(idx);
+          requestDraw(Math.round(o.f));
         },
       }, 0);
 
-      // Headline 1: fade + slide up, then out
-      tl.fromTo(h1,
-        { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" },
-        0
-      );
-      tl.to(h1,
-        { opacity: 0, y: -40, duration: 0.15, ease: "power2.in" },
-        0.25
-      );
+      // Headline 1: slide up + fade in, then slide up + fade out
+      tl.fromTo(h1, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.12, ease: "power2.out" }, 0.02);
+      tl.to(h1, { opacity: 0, y: -30, duration: 0.12, ease: "power2.in" }, 0.22);
 
-      // Headline 2: fade + slide up in
-      tl.fromTo(h2,
-        { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, duration: 0.2, ease: "power2.out" },
-        0.5
-      );
+      // Headline 2: slide up + fade in
+      tl.fromTo(h2, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" }, 0.5);
     });
 
     return () => ctx.revert();
-  }, [reducedMotion, loaded]);
+  }, [reduced, ready]);
 
-  if (reducedMotion) {
+  // ── Reduced-motion fallback ──
+  if (reduced) {
     return (
       <section className="relative min-h-[90vh] flex items-center justify-center pt-20 overflow-hidden"
         style={{ background: "radial-gradient(ellipse 120% 100% at 50% 40%, #151c26 0%, #0d1117 70%)" }}>
@@ -166,8 +136,7 @@ export default function HeroCanvas() {
             1 of 1 — Only certified ChemTec installer · 10-year warranty
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-cream tracking-tight leading-[1.1]">
-            A garage floor{" "}
-            <span className="font-serif italic">built to outlast</span> the house.
+            A garage floor <span className="font-serif italic">built to outlast</span> the house.
           </h1>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#quote" className="btn-pill btn-pill-primary text-lg">Get a Free Quote</a>
@@ -183,48 +152,44 @@ export default function HeroCanvas() {
 
   return (
     <section
-      ref={sectionRef}
+      ref={pinRef}
       className="relative h-screen overflow-hidden"
-      style={{ background: "radial-gradient(ellipse 130% 100% at 50% 30%, #1a2436 0%, #0d1117 60%)" }}
+      style={{ background: "#0d1117" }}
     >
-      {/* Immersive gradient overlay — top */}
-      <div className="absolute inset-x-0 top-0 h-40 z-[3] pointer-events-none"
-        style={{ background: "linear-gradient(to bottom, #0d1117 0%, transparent 100%)" }} />
-
-      {/* Immersive gradient overlay — bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-48 z-[3] pointer-events-none"
-        style={{ background: "linear-gradient(to top, #0d1117 0%, transparent 100%)" }} />
-
-      {/* Side vignettes */}
-      <div className="absolute inset-0 z-[2] pointer-events-none"
-        style={{
-          background: `
-            linear-gradient(to right, #0d1117 0%, transparent 15%),
-            linear-gradient(to left, #0d1117 0%, transparent 15%)
-          `
-        }} />
-
-      {/* Ambient glow */}
-      <div className="absolute inset-0 z-[1] pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(232,99,26,0.04) 0%, transparent 70%)" }} />
-
-      {/* Canvas — full screen, CSS object-fit cover */}
+      {/* Canvas — native res, CSS stretches to fill viewport */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 z-[1]"
+        className="absolute inset-0 w-full h-full"
+        style={{ objectFit: "cover" }}
         aria-hidden="true"
       />
 
-      {/* Headline 1 */}
-      <div ref={headline1Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none" style={{ opacity: 0 }}>
+      {/* ── Immersive gradient overlays ── */}
+      {/* Top fade */}
+      <div className="absolute inset-x-0 top-0 h-44 z-[3] pointer-events-none"
+        style={{ background: "linear-gradient(to bottom, rgba(13,17,23,0.85) 0%, rgba(13,17,23,0) 100%)" }} />
+      {/* Bottom fade */}
+      <div className="absolute inset-x-0 bottom-0 h-56 z-[3] pointer-events-none"
+        style={{ background: "linear-gradient(to top, #0d1117 0%, rgba(13,17,23,0) 100%)" }} />
+      {/* Left vignette */}
+      <div className="absolute inset-y-0 left-0 w-[20%] z-[2] pointer-events-none"
+        style={{ background: "linear-gradient(to right, rgba(13,17,23,0.7) 0%, transparent 100%)" }} />
+      {/* Right vignette */}
+      <div className="absolute inset-y-0 right-0 w-[20%] z-[2] pointer-events-none"
+        style={{ background: "linear-gradient(to left, rgba(13,17,23,0.7) 0%, transparent 100%)" }} />
+      {/* Radial vignette */}
+      <div className="absolute inset-0 z-[2] pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 50%, rgba(13,17,23,0.6) 100%)" }} />
+
+      {/* ── Headline 1 ── */}
+      <div ref={h1Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none" style={{ opacity: 0 }}>
         <div className="pointer-events-auto">
           <div className="warranty-chip mb-6">
             <span className="w-2 h-2 rounded-full bg-orange inline-block" />
             1 of 1 — Only certified ChemTec installer · 10-year warranty
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto">
-            A garage floor{" "}
-            <span className="font-serif italic">built to outlast</span> the house.
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
+            A garage floor <span className="font-serif italic">built to outlast</span> the house.
           </h1>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
@@ -233,12 +198,11 @@ export default function HeroCanvas() {
         </div>
       </div>
 
-      {/* Headline 2 */}
-      <div ref={headline2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none" style={{ opacity: 0 }}>
+      {/* ── Headline 2 ── */}
+      <div ref={h2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none" style={{ opacity: 0 }}>
         <div className="pointer-events-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto">
-            Not a coating.{" "}
-            <span className="font-serif italic">A finished surface.</span>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
+            Not a coating. <span className="font-serif italic">A finished surface.</span>
           </h2>
           <div className="mt-8">
             <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
@@ -247,9 +211,12 @@ export default function HeroCanvas() {
       </div>
 
       {/* Loading */}
-      {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 bg-ink/60">
-          <div className="w-10 h-10 border-2 border-orange/30 border-t-orange rounded-full animate-spin" />
+      {!ready && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 bg-[#0d1117]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-orange/30 border-t-orange rounded-full animate-spin" />
+            <span className="text-sm text-cream/40">Loading experience…</span>
+          </div>
         </div>
       )}
     </section>
