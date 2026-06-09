@@ -119,19 +119,19 @@ export default function HeroCanvas() {
           scrollTrigger: {
             trigger: el,
             start: "top top",
-            end: "+=500%",
+            end: "+=600%",
             pin: true,
-            scrub: 0.5,
+            scrub: 0.6,
             anticipatePin: 1,
           },
         });
 
-        // Video seek (0 → 0.55)
+        // Video seek spans phases 1–3 (0 → 0.78)
         if (canSeek) {
           const o = { t: 0 };
           tl.to(o, {
             t: dur,
-            duration: 0.55,
+            duration: 0.78,
             ease: "none",
             onUpdate() {
               if (Math.abs(video!.currentTime - o.t) > 0.03) {
@@ -141,25 +141,25 @@ export default function HeroCanvas() {
           }, 0);
         }
 
-        // Headline 1 out
-        tl.to(h1, { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.05);
+        // ── PHASE 1 (0.00–0.28): Headline 1 visible, fades out ──
+        tl.to(h1, { opacity: 0, y: -40, duration: 0.07, ease: "power2.in" }, 0.22);
 
-        // Headline 2 in/out
-        tl.fromTo(h2, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.18);
-        tl.to(h2, { opacity: 0, y: -30, duration: 0.06, ease: "power2.in" }, 0.42);
+        // ── PHASE 2 (0.30–0.56): Headline 2 fades in, holds, fades out ──
+        tl.fromTo(h2, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.07, ease: "power3.out" }, 0.32);
+        tl.to(h2, { opacity: 0, y: -40, duration: 0.06, ease: "power2.in" }, 0.52);
 
-        // Callouts in
-        tl.fromTo(h3, { opacity: 0 }, { opacity: 1, duration: 0.04 }, 0.50);
+        // ── PHASE 3 (0.60–0.84): Callouts stagger in, hold, fade out ──
+        tl.fromTo(h3, { opacity: 0 }, { opacity: 1, duration: 0.03 }, 0.60);
         callouts.forEach((callout, i) => {
           tl.fromTo(callout,
             { opacity: 0, scale: 0, rotateX: -20 },
-            { opacity: 1, scale: 1, rotateX: 0, duration: 0.05, ease: "back.out(1.7)" },
-            0.52 + i * 0.025
+            { opacity: 1, scale: 1, rotateX: 0, duration: 0.04, ease: "back.out(1.7)" },
+            0.62 + i * 0.02
           );
         });
-
-        // Callouts out + dark→light
         tl.to(h3, { opacity: 0, duration: 0.05, ease: "power2.in" }, 0.82);
+
+        // ── PHASE 4 (0.88–1.0): Dark → light transition ──
         tl.fromTo(fade, { opacity: 0 }, { opacity: 1, duration: 0.10, ease: "power1.inOut" }, 0.88);
       });
 
