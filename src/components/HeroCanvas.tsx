@@ -124,12 +124,33 @@ export default function HeroCanvas() {
           }, 0);
         }
 
-        // ── PHASE 1: Headline 1 fades out (starts visible via CSS animation) ──
-        tl.to(h1, { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.10);
+        // ── PHASE 1: Headline 1 children stagger out ──
+        const h1Kids = h1.querySelectorAll(".hero-h1-child");
+        h1Kids.forEach((kid, i) => {
+          tl.to(kid, {
+            opacity: 0, y: -40, scale: 0.96,
+            duration: 0.06, ease: "power2.in",
+          }, 0.10 + i * 0.015);
+        });
 
-        // ── PHASE 2: Headline 2 in then out ──
-        tl.fromTo(h2, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.24);
-        tl.to(h2, { opacity: 0, y: -30, duration: 0.06, ease: "power2.in" }, 0.42);
+        // ── PHASE 2: Headline 2 container visible, children stagger in ──
+        tl.to(h2, { opacity: 1, duration: 0.01 }, 0.24);
+        const h2Kids = h2.querySelectorAll(".hero-h2-child");
+        h2Kids.forEach((kid, i) => {
+          tl.fromTo(kid,
+            { opacity: 0, y: 60, scale: 0.92 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.07, ease: "power3.out" },
+            0.25 + i * 0.02
+          );
+        });
+        // Headline 2 children stagger out
+        h2Kids.forEach((kid, i) => {
+          tl.to(kid, {
+            opacity: 0, y: -40, scale: 0.96,
+            duration: 0.05, ease: "power2.in",
+          }, 0.42 + i * 0.012);
+        });
+        tl.to(h2, { opacity: 0, duration: 0.01 }, 0.48);
 
         // ── PHASE 3: Feature callouts stagger in ──
         tl.fromTo(h3, { opacity: 0 }, { opacity: 1, duration: 0.04 }, 0.52);
@@ -261,28 +282,34 @@ export default function HeroCanvas() {
       <div className="hero-gradient absolute inset-0 z-[2]"
         style={{ background: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 50%, rgba(13,17,23,0.55) 100%)" }} />
 
-      {/* Headline 1 — CSS entrance animation, GSAP only handles scroll-out */}
-      <div ref={h1Ref} className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center px-5 pointer-events-none hero-h1-enter" style={{ willChange: "opacity, transform" }}>
+      {/* Headline 1 — staggered CSS entrance, GSAP handles scroll-out */}
+      <div ref={h1Ref} className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center px-5 pointer-events-none" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
-          <div className="warranty-chip mb-6">
+          <div className="hero-h1-child hero-h1-child-1 warranty-chip mb-6">
             <span className="w-2 h-2 rounded-full bg-orange inline-block" />
             1 of 1 — Only certified ChemTec installer · 10-year warranty
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
+          <h1 className="hero-h1-child hero-h1-child-2 text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
             A garage floor <span className="font-serif italic">built to outlast</span> the house.
           </h1>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="hero-h1-child hero-h1-child-3 mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
             <a href={`tel:${PHONE}`} className="btn-pill btn-pill-ghost text-base">Call Now</a>
           </div>
         </div>
       </div>
 
-      {/* Headline 2 */}
+      {/* Headline 2 — children animated individually by GSAP */}
       <div ref={h2Ref} className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
-        <div className="pointer-events-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
-            Not a coating. <span className="font-serif italic">A finished surface.</span>
+        <div className="pointer-events-auto max-w-4xl mx-auto">
+          <p className="hero-h2-child text-orange text-xs md:text-sm font-semibold tracking-[0.25em] uppercase mb-4 opacity-0">
+            Premium Epoxy Flooring
+          </p>
+          <h2 className="hero-h2-child text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)] opacity-0">
+            Not a coating.
+          </h2>
+          <h2 className="hero-h2-child mt-2 text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)] opacity-0">
+            <span className="font-serif italic text-cream/80">A finished surface.</span>
           </h2>
         </div>
       </div>
