@@ -8,6 +8,12 @@ import { useEffect } from "react";
  * (e.g. mobile-only components that mount after initial render).
  */
 export default function ScrollReveal() {
+  // Force scroll to top on load/refresh (prevents browser restoring mid-page position)
+  useEffect(() => {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
