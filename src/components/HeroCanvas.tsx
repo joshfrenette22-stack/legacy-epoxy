@@ -169,13 +169,13 @@ export default function HeroCanvas() {
           );
         });
 
-        // ── Phase 4: Callouts out + dark→light transition (0.80 → 1.0) ──
+        // ── Phase 4: Callouts out + quick dark→light transition ──
         tl.to(h3,
-          { opacity: 0, duration: 0.06, ease: "power2.in" }, 0.80);
+          { opacity: 0, duration: 0.05, ease: "power2.in" }, 0.82);
 
         tl.fromTo(fade,
           { opacity: 0 },
-          { opacity: 1, duration: 0.16, ease: "power2.inOut" }, 0.84);
+          { opacity: 1, duration: 0.10, ease: "power1.inOut" }, 0.88);
       });
 
       cleanup = () => ctx.revert();
