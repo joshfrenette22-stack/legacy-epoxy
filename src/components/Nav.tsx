@@ -34,7 +34,7 @@ export default function Nav() {
         {/* Logo */}
         <a href="#" className="flex items-center shrink-0">
           <img
-            src="/logo.svg"
+            src="/logo-white.svg"
             alt="Legacy Epoxy"
             className="h-9 md:h-10 w-auto"
           />
