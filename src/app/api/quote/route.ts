@@ -1,9 +1,9 @@
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const BUSINESS_EMAIL = "hello@legacyepoxy.com"; // TODO: replace with real inbox
+
+export const dynamic = "force-dynamic";
 
 interface QuotePayload {
   name: string;
@@ -16,6 +16,7 @@ interface QuotePayload {
 
 export async function POST(request: Request) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const body: QuotePayload = await request.json();
 
     if (!body.name || !body.phone || !body.email || !body.zip || !body.projectType) {
