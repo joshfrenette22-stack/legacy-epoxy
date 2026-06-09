@@ -132,24 +132,18 @@ export default function HeroCanvas() {
       className="relative overflow-hidden"
       style={{ background: "#0d1117", height: "100dvh" }}
     >
-      {/* Desktop: video | Mobile: poster image */}
-      {mounted && !mobile ? (
-        <video
-          ref={videoRef}
-          src="/hero.mp4"
-          muted
-          playsInline
-          preload="auto"
-          poster="/images/hero-poster.jpg"
-          className="absolute inset-0 w-full h-full object-cover z-[1]"
-        />
-      ) : (
-        <img
-          src="/images/hero-poster.jpg"
-          alt="Epoxy floor installation"
-          className="absolute inset-0 w-full h-full object-cover z-[1] opacity-70"
-        />
-      )}
+      {/* Desktop: scroll-scrubbed video | Mobile: autoplay loop */}
+      <video
+        ref={videoRef}
+        src="/hero.mp4"
+        muted
+        playsInline
+        preload="auto"
+        autoPlay={mobile}
+        loop={mobile}
+        poster="/images/hero-poster.jpg"
+        className={`absolute inset-0 w-full h-full object-cover z-[1] ${mobile ? "opacity-70" : ""}`}
+      />
 
       {/* Gradient overlays */}
       <div className="hero-gradient absolute inset-x-0 top-0 h-32 md:h-44 z-[3]"

@@ -130,17 +130,17 @@ export default function ChemTecSection() {
       className="relative overflow-hidden"
       style={{ height: "100dvh", background: "#faf7f1" }}
     >
-      {/* Desktop: video | Mobile: solid cream bg (no video) */}
-      {mounted && !mobile && (
-        <video
-          ref={videoRef}
-          src="/chemtec.mp4"
-          muted
-          playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover z-[1]"
-        />
-      )}
+      {/* Desktop: scroll-scrubbed video | Mobile: autoplay loop */}
+      <video
+        ref={videoRef}
+        src="/chemtec.mp4"
+        muted
+        playsInline
+        preload="auto"
+        autoPlay={mobile}
+        loop={mobile}
+        className="absolute inset-0 w-full h-full object-cover z-[1]"
+      />
 
       {/* Cream gradient edges */}
       <div className="chemtec-gradient absolute inset-x-0 top-0 h-32 md:h-48 z-[3]"
