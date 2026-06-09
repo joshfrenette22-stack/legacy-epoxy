@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PHONE = "9705551234"; // TODO: replace with real number
 
@@ -9,8 +9,8 @@ export default function HeroCanvas() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const h1Ref = useRef<HTMLDivElement>(null);
   const h2Ref = useRef<HTMLDivElement>(null);
-  const played = useRef(false);
   const [reduced, setReduced] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   // Detect reduced motion
   useEffect(() => {
@@ -21,60 +21,57 @@ export default function HeroCanvas() {
     return () => mq.removeEventListener("change", fn);
   }, []);
 
-  // Animate headline 1 in on page load (no scroll required)
+  // Wait for video to be seekable
   useEffect(() => {
     if (reduced) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onReady = () => {
+      if (video.readyState >= 2) {
+        video.currentTime = 0;
+        setVideoReady(true);
+      }
+    };
+
+    if (video.readyState >= 2) {
+      video.currentTime = 0;
+      setVideoReady(true);
+    } else {
+      video.addEventListener("loadeddata", onReady);
+      return () => video.removeEventListener("loadeddata", onReady);
+    }
+  }, [reduced]);
+
+  // Animate headline 1 in on page load (no scroll required)
+  useEffect(() => {
+    if (reduced || !videoReady) return;
     const h1 = h1Ref.current;
     if (!h1) return;
 
-    // Small delay so the page settles first
+    let cleanup: (() => void) | undefined;
     const timer = setTimeout(async () => {
       const gsap = (await import("gsap")).default;
       gsap.fromTo(h1,
         { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
+        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }
       );
-    }, 400);
+    }, 300);
 
-    return () => clearTimeout(timer);
-  }, [reduced]);
+    return () => {
+      clearTimeout(timer);
+      cleanup?.();
+    };
+  }, [reduced, videoReady]);
 
-  // Scroll-triggered auto-play: pin section, play video, transition headlines, then unpin
-  const triggerAutoPlay = useCallback(async () => {
-    if (played.current) return;
-    played.current = true;
-
+  // GSAP scroll-scrub: seek video + animate headlines
+  useEffect(() => {
+    if (reduced || !videoReady) return;
+    const el = pinRef.current;
     const video = videoRef.current;
     const h1 = h1Ref.current;
     const h2 = h2Ref.current;
-    if (!video || !h1 || !h2) return;
-
-    const gsap = (await import("gsap")).default;
-
-    // Fade out headline 1
-    gsap.to(h1, { opacity: 0, y: -40, duration: 0.8, ease: "power2.in" });
-
-    // Play the video
-    try {
-      await video.play();
-    } catch {
-      // Autoplay blocked — just show headline 2
-    }
-
-    // Fade in headline 2 partway through
-    const videoDuration = video.duration || 3.5;
-    gsap.fromTo(h2,
-      { opacity: 0, y: 50 },
-      { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: videoDuration * 0.45 }
-    );
-  }, []);
-
-  // Set up ScrollTrigger for pinning + detecting first scroll
-  useEffect(() => {
-    if (reduced) return;
-    const el = pinRef.current;
-    const video = videoRef.current;
-    if (!el || !video) return;
+    if (!el || !video || !h1 || !h2) return;
 
     let cleanup: (() => void) | undefined;
 
@@ -83,32 +80,50 @@ export default function HeroCanvas() {
       const { ScrollTrigger } = await import("gsap/ScrollTrigger");
       gsap.registerPlugin(ScrollTrigger);
 
+      const duration = video.duration || 3.5;
+
       const ctx = gsap.context(() => {
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top top",
-          end: "+=150%",
-          pin: true,
-          onUpdate(self) {
-            // Trigger auto-play as soon as user starts scrolling
-            if (self.progress > 0.01 && !played.current) {
-              triggerAutoPlay();
-            }
-          },
-          onLeave() {
-            // When scroll passes the pinned section, pause video if still playing
-            if (video && !video.paused) {
-              video.pause();
-            }
+        const o = { t: 0 };
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: el,
+            start: "top top",
+            end: "+=250%",
+            pin: true,
+            scrub: 0.5,
+            anticipatePin: 1,
           },
         });
+
+        // Video seek — scrub currentTime from 0 to duration
+        tl.to(o, {
+          t: duration,
+          ease: "none",
+          onUpdate() {
+            // Only seek if video is ready and time actually changed
+            const target = o.t;
+            if (Math.abs(video.currentTime - target) > 0.03) {
+              video.currentTime = target;
+            }
+          },
+        }, 0);
+
+        // Headline 1: already visible from load animation, fade out on scroll
+        tl.to(h1,
+          { opacity: 0, y: -30, duration: 0.15, ease: "power2.in" }, 0.15);
+
+        // Headline 2: fade in
+        tl.fromTo(h2,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" }, 0.5);
       });
 
       cleanup = () => ctx.revert();
     })();
 
     return () => cleanup?.();
-  }, [reduced, triggerAutoPlay]);
+  }, [reduced, videoReady]);
 
   // Reduced motion fallback
   if (reduced) {
@@ -141,7 +156,7 @@ export default function HeroCanvas() {
       className="relative h-screen overflow-hidden"
       style={{ background: "#0d1117" }}
     >
-      {/* Video — single MP4, hardware decoded, no frame-by-frame jank */}
+      {/* Video — single MP4 with all-keyframe encoding for instant seeking */}
       <video
         ref={videoRef}
         src="/hero.mp4"
@@ -164,7 +179,7 @@ export default function HeroCanvas() {
       <div className="hero-gradient absolute inset-0 z-[2]"
         style={{ background: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 50%, rgba(13,17,23,0.55) 100%)" }} />
 
-      {/* Headline 1 — animates in on page load */}
+      {/* Headline 1 — animates in on page load, fades out on scroll */}
       <div ref={h1Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <div className="warranty-chip mb-6">
@@ -181,7 +196,7 @@ export default function HeroCanvas() {
         </div>
       </div>
 
-      {/* Headline 2 — fades in during video auto-play */}
+      {/* Headline 2 — fades in mid-scroll */}
       <div ref={h2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
@@ -192,6 +207,16 @@ export default function HeroCanvas() {
           </div>
         </div>
       </div>
+
+      {/* Loading overlay — shows until video is seekable */}
+      {!videoReady && (
+        <div className="absolute inset-0 flex items-center justify-center z-30 bg-[#0d1117]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-orange/30 border-t-orange rounded-full animate-spin" />
+            <span className="text-sm text-cream/40 font-medium">Loading…</span>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
