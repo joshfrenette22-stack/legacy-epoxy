@@ -96,17 +96,17 @@ export default function HeroCanvas() {
           },
         }, 0);
 
-        // Headline 1: fade + slide in, then out
+        // Headline 1: opacity + transform only (no layout triggers)
         tl.fromTo(h1,
-          { autoAlpha: 0, y: 40 },
-          { autoAlpha: 1, y: 0, duration: 0.12, ease: "power2.out" }, 0.02);
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.12, ease: "power2.out" }, 0.02);
         tl.to(h1,
-          { autoAlpha: 0, y: -30, duration: 0.12, ease: "power2.in" }, 0.22);
+          { opacity: 0, y: -30, duration: 0.12, ease: "power2.in" }, 0.22);
 
-        // Headline 2: fade + slide in
+        // Headline 2: opacity + transform only
         tl.fromTo(h2,
-          { autoAlpha: 0, y: 40 },
-          { autoAlpha: 1, y: 0, duration: 0.15, ease: "power2.out" }, 0.5);
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" }, 0.5);
       });
 
       cleanup = () => ctx.revert();
@@ -155,20 +155,20 @@ export default function HeroCanvas() {
         draggable={false}
       />
 
-      {/* Immersive gradient overlays */}
-      <div className="absolute inset-x-0 top-0 h-44 z-[3] pointer-events-none"
+      {/* Immersive gradient overlays — GPU composited layers */}
+      <div className="hero-gradient absolute inset-x-0 top-0 h-44 z-[3]"
         style={{ background: "linear-gradient(to bottom, rgba(13,17,23,0.85), transparent)" }} />
-      <div className="absolute inset-x-0 bottom-0 h-56 z-[3] pointer-events-none"
+      <div className="hero-gradient absolute inset-x-0 bottom-0 h-56 z-[3]"
         style={{ background: "linear-gradient(to top, #0d1117, transparent)" }} />
-      <div className="absolute inset-y-0 left-0 w-[18%] z-[2] pointer-events-none"
+      <div className="hero-gradient absolute inset-y-0 left-0 w-[18%] z-[2]"
         style={{ background: "linear-gradient(to right, rgba(13,17,23,0.65), transparent)" }} />
-      <div className="absolute inset-y-0 right-0 w-[18%] z-[2] pointer-events-none"
+      <div className="hero-gradient absolute inset-y-0 right-0 w-[18%] z-[2]"
         style={{ background: "linear-gradient(to left, rgba(13,17,23,0.65), transparent)" }} />
-      <div className="absolute inset-0 z-[2] pointer-events-none"
+      <div className="hero-gradient absolute inset-0 z-[2]"
         style={{ background: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 50%, rgba(13,17,23,0.55) 100%)" }} />
 
       {/* Headline 1 */}
-      <div ref={h1Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none invisible">
+      <div ref={h1Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <div className="warranty-chip mb-6">
             <span className="w-2 h-2 rounded-full bg-orange inline-block" />
@@ -185,7 +185,7 @@ export default function HeroCanvas() {
       </div>
 
       {/* Headline 2 */}
-      <div ref={h2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none invisible">
+      <div ref={h2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
             Not a coating. <span className="font-serif italic">A finished surface.</span>
