@@ -2,39 +2,14 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
-const TOTAL = 84;
-const frameSrc = (i: number) => `/frames/frame_${String(i).padStart(3, "0")}.jpg`;
 const PHONE = "9705551234"; // TODO: replace with real number
-
-/**
- * Draw an image onto a canvas with "object-fit: cover" behavior.
- * Safari doesn't support object-fit on <canvas>, so we calculate it manually.
- */
-function drawCover(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  cw: number,
-  ch: number
-) {
-  const iw = img.naturalWidth;
-  const ih = img.naturalHeight;
-  if (!iw || !ih) return;
-  const scale = Math.max(cw / iw, ch / ih);
-  const sw = iw * scale;
-  const sh = ih * scale;
-  const sx = (cw - sw) / 2;
-  const sy = (ch - sh) / 2;
-  ctx.drawImage(img, sx, sy, sw, sh);
-}
 
 export default function HeroCanvas() {
   const pinRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const h1Ref = useRef<HTMLDivElement>(null);
   const h2Ref = useRef<HTMLDivElement>(null);
-  const cur = useRef(0);
-  const images = useRef<HTMLImageElement[]>([]);
-  const [ready, setReady] = useState(false);
+  const played = useRef(false);
   const [reduced, setReduced] = useState(false);
 
   // Detect reduced motion
@@ -46,66 +21,60 @@ export default function HeroCanvas() {
     return () => mq.removeEventListener("change", fn);
   }, []);
 
-  // Preload + decode all frames into Image objects (kept in memory)
+  // Animate headline 1 in on page load (no scroll required)
   useEffect(() => {
     if (reduced) return;
-    let count = 0;
-    const imgs: HTMLImageElement[] = new Array(TOTAL);
+    const h1 = h1Ref.current;
+    if (!h1) return;
 
-    for (let i = 0; i < TOTAL; i++) {
-      const img = new Image();
-      img.src = frameSrc(i + 1);
-      imgs[i] = img;
-      const done = () => {
-        count++;
-        if (count >= TOTAL) {
-          images.current = imgs;
-          setReady(true);
-        }
-      };
-      img.decode().then(done, done);
-    }
+    // Small delay so the page settles first
+    const timer = setTimeout(async () => {
+      const gsap = (await import("gsap")).default;
+      gsap.fromTo(h1,
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
+      );
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [reduced]);
 
-  // Size canvas to container and draw a frame
-  const paintFrame = useCallback((idx: number) => {
-    const canvas = canvasRef.current;
-    const img = images.current[idx];
-    if (!canvas || !img) return;
+  // Scroll-triggered auto-play: pin section, play video, transition headlines, then unpin
+  const triggerAutoPlay = useCallback(async () => {
+    if (played.current) return;
+    played.current = true;
 
-    const rect = canvas.getBoundingClientRect();
-    const cw = rect.width;
-    const ch = rect.height;
-
-    // Size canvas buffer to 1x CSS pixels (not retina) for performance
-    if (canvas.width !== cw || canvas.height !== ch) {
-      canvas.width = cw;
-      canvas.height = ch;
-    }
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, cw, ch);
-    drawCover(ctx, img, cw, ch);
-  }, []);
-
-  // Paint first frame + handle resize once ready
-  useEffect(() => {
-    if (!ready) return;
-    paintFrame(0);
-
-    const onResize = () => paintFrame(cur.current);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [ready, paintFrame]);
-
-  // GSAP scroll — dynamic import avoids SSR
-  useEffect(() => {
-    if (reduced || !ready) return;
-    const el = pinRef.current;
+    const video = videoRef.current;
     const h1 = h1Ref.current;
     const h2 = h2Ref.current;
-    if (!el || !h1 || !h2) return;
+    if (!video || !h1 || !h2) return;
+
+    const gsap = (await import("gsap")).default;
+
+    // Fade out headline 1
+    gsap.to(h1, { opacity: 0, y: -40, duration: 0.8, ease: "power2.in" });
+
+    // Play the video
+    try {
+      await video.play();
+    } catch {
+      // Autoplay blocked — just show headline 2
+    }
+
+    // Fade in headline 2 partway through
+    const videoDuration = video.duration || 3.5;
+    gsap.fromTo(h2,
+      { opacity: 0, y: 50 },
+      { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: videoDuration * 0.45 }
+    );
+  }, []);
+
+  // Set up ScrollTrigger for pinning + detecting first scroll
+  useEffect(() => {
+    if (reduced) return;
+    const el = pinRef.current;
+    const video = videoRef.current;
+    if (!el || !video) return;
 
     let cleanup: (() => void) | undefined;
 
@@ -115,50 +84,31 @@ export default function HeroCanvas() {
       gsap.registerPlugin(ScrollTrigger);
 
       const ctx = gsap.context(() => {
-        const o = { f: 0 };
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: el,
-            start: "top top",
-            end: "+=250%",
-            pin: true,
-            scrub: 1,
-            anticipatePin: 1,
-          },
-        });
-
-        // Frame scrub — drawImage from pre-decoded Image objects (pure GPU blit)
-        tl.to(o, {
-          f: TOTAL - 1,
-          ease: "none",
-          onUpdate() {
-            const idx = Math.round(o.f);
-            if (idx !== cur.current) {
-              cur.current = idx;
-              paintFrame(idx);
+        ScrollTrigger.create({
+          trigger: el,
+          start: "top top",
+          end: "+=150%",
+          pin: true,
+          onUpdate(self) {
+            // Trigger auto-play as soon as user starts scrolling
+            if (self.progress > 0.01 && !played.current) {
+              triggerAutoPlay();
             }
           },
-        }, 0);
-
-        // Headline 1: opacity + transform only (no layout triggers)
-        tl.fromTo(h1,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.12, ease: "power2.out" }, 0.02);
-        tl.to(h1,
-          { opacity: 0, y: -30, duration: 0.12, ease: "power2.in" }, 0.22);
-
-        // Headline 2: opacity + transform only
-        tl.fromTo(h2,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" }, 0.5);
+          onLeave() {
+            // When scroll passes the pinned section, pause video if still playing
+            if (video && !video.paused) {
+              video.pause();
+            }
+          },
+        });
       });
 
       cleanup = () => ctx.revert();
     })();
 
     return () => cleanup?.();
-  }, [reduced, ready, paintFrame]);
+  }, [reduced, triggerAutoPlay]);
 
   // Reduced motion fallback
   if (reduced) {
@@ -191,11 +141,15 @@ export default function HeroCanvas() {
       className="relative h-screen overflow-hidden"
       style={{ background: "#0d1117" }}
     >
-      {/* Canvas — drawImage from pre-decoded frames, no src swapping */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full z-[1]"
-        style={{ display: "block" }}
+      {/* Video — single MP4, hardware decoded, no frame-by-frame jank */}
+      <video
+        ref={videoRef}
+        src="/hero.mp4"
+        muted
+        playsInline
+        preload="auto"
+        poster="/images/hero-poster.jpg"
+        className="absolute inset-0 w-full h-full object-cover z-[1]"
       />
 
       {/* Immersive gradient overlays — GPU composited layers */}
@@ -210,7 +164,7 @@ export default function HeroCanvas() {
       <div className="hero-gradient absolute inset-0 z-[2]"
         style={{ background: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 50%, rgba(13,17,23,0.55) 100%)" }} />
 
-      {/* Headline 1 */}
+      {/* Headline 1 — animates in on page load */}
       <div ref={h1Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <div className="warranty-chip mb-6">
@@ -227,7 +181,7 @@ export default function HeroCanvas() {
         </div>
       </div>
 
-      {/* Headline 2 */}
+      {/* Headline 2 — fades in during video auto-play */}
       <div ref={h2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
@@ -238,16 +192,6 @@ export default function HeroCanvas() {
           </div>
         </div>
       </div>
-
-      {/* Loading overlay */}
-      {!ready && (
-        <div className="absolute inset-0 flex items-center justify-center z-30 bg-[#0d1117]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-orange/30 border-t-orange rounded-full animate-spin" />
-            <span className="text-sm text-cream/40 font-medium">Loading…</span>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
