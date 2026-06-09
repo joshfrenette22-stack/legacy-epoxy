@@ -23,7 +23,6 @@ export default function HeroCanvas() {
   const h3Ref = useRef<HTMLDivElement>(null);
   const fadeRef = useRef<HTMLDivElement>(null);
   const calloutRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [ready, setReady] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -33,39 +32,11 @@ export default function HeroCanvas() {
       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     setMobile(isMobile);
     setMounted(true);
-    if (isMobile) setReady(true);
   }, []);
 
-  // Desktop: wait for video
+  // Desktop: ALL GSAP animations in one context — no video loading gate
   useEffect(() => {
     if (!mounted || mobile) return;
-
-    const video = videoRef.current;
-    if (!video) { setReady(true); return; }
-
-    let resolved = false;
-    const markReady = () => {
-      if (resolved) return;
-      resolved = true;
-      if (video.readyState >= 2) video.currentTime = 0;
-      setReady(true);
-    };
-
-    if (video.readyState >= 2) { markReady(); return; }
-
-    video.addEventListener("loadeddata", markReady);
-    video.load();
-    const timeout = setTimeout(markReady, 3000);
-
-    return () => {
-      video.removeEventListener("loadeddata", markReady);
-      clearTimeout(timeout);
-    };
-  }, [mounted, mobile]);
-
-  // Desktop: ALL GSAP animations in one context
-  useEffect(() => {
-    if (!ready || mobile) return;
     const el = pinRef.current;
     const h1 = h1Ref.current;
     const h2 = h2Ref.current;
@@ -75,8 +46,7 @@ export default function HeroCanvas() {
     if (!el || !h1 || !h2 || !h3 || !fade || callouts.length === 0) return;
 
     const video = videoRef.current;
-    const canSeek = video && video.readyState >= 2;
-    const dur = canSeek ? (video!.duration || 3.5) : 3.5;
+    const dur = (video?.duration && video.duration > 0) ? video.duration : 3.5;
 
     let cleanup: (() => void) | undefined;
 
@@ -104,16 +74,16 @@ export default function HeroCanvas() {
           },
         });
 
-        // Video scrub
-        if (canSeek) {
+        // Video scrub — seeks even if video loads late
+        if (video) {
           const o = { t: 0 };
           tl.to(o, {
             t: dur,
             duration: 0.55,
             ease: "none",
             onUpdate() {
-              if (Math.abs(video!.currentTime - o.t) > 0.03) {
-                video!.currentTime = o.t;
+              if (video.readyState >= 2 && Math.abs(video.currentTime - o.t) > 0.03) {
+                video.currentTime = o.t;
               }
             },
           }, 0);
@@ -154,7 +124,7 @@ export default function HeroCanvas() {
     })();
 
     return () => cleanup?.();
-  }, [ready, mobile]);
+  }, [mounted, mobile]);
 
   // ── Mobile: simple static layout ──
   if (mounted && mobile) {
@@ -305,15 +275,6 @@ export default function HeroCanvas() {
         style={{ background: "#faf7f1", willChange: "opacity" }}
       />
 
-      {/* Loading overlay */}
-      {!ready && (
-        <div className="absolute inset-0 flex items-center justify-center z-30 bg-[#0d1117]">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-orange/30 border-t-orange rounded-full animate-spin" />
-            <span className="text-sm text-cream/40 font-medium">Loading…</span>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
