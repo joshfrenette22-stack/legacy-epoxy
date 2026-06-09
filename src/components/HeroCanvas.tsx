@@ -39,12 +39,12 @@ export default function HeroCanvas() {
     setMounted(true);
   }, []);
 
-  // Mobile: autoplay video (iOS blocks programmatic seeking)
+  // Mobile: autoplay video once then stop on final frame (iOS blocks programmatic seeking)
   useEffect(() => {
     if (!mounted || !mobileRef.current) return;
     const video = videoRef.current;
     if (!video) return;
-    video.loop = true;
+    video.loop = false;
     video.play().catch(() => {});
   }, [mounted]);
 
