@@ -4,12 +4,14 @@ import { useEffect } from "react";
 
 /*
  * Pure IntersectionObserver + CSS animations.
- * Zero layout/style cost during scroll — all runs off main thread.
- * GSAP ScrollTrigger removed to eliminate forced reflows.
+ * Uses MutationObserver to catch dynamically rendered elements
+ * (e.g. mobile-only components that mount after initial render).
  */
 export default function ScrollReveal() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const selector = "[data-reveal],[data-stagger],[data-scale-in]";
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -23,11 +25,27 @@ export default function ScrollReveal() {
       { threshold: 0.1, rootMargin: "0px 0px -8% 0px" }
     );
 
-    document.querySelectorAll("[data-reveal],[data-stagger],[data-scale-in]").forEach((el) => {
-      io.observe(el);
-    });
+    const observed = new WeakSet<Element>();
 
-    return () => io.disconnect();
+    function observeAll() {
+      document.querySelectorAll(selector).forEach((el) => {
+        if (!observed.has(el)) {
+          observed.add(el);
+          io.observe(el);
+        }
+      });
+    }
+
+    observeAll();
+
+    // Watch for dynamically added elements (mobile conditional renders)
+    const mo = new MutationObserver(() => observeAll());
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+    };
   }, []);
 
   return null;
