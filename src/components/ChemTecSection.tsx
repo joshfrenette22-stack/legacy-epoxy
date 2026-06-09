@@ -26,15 +26,6 @@ export default function ChemTecSection() {
     setMounted(true);
   }, []);
 
-  // Mobile: manually start video autoplay
-  useEffect(() => {
-    if (!mounted || !mobileRef.current) return;
-    const video = videoRef.current;
-    if (!video) return;
-    video.loop = true;
-    video.play().catch(() => {});
-  }, [mounted]);
-
   // GSAP scroll-scrub — runs on BOTH mobile and desktop
   useEffect(() => {
     if (!mounted) return;
@@ -67,8 +58,9 @@ export default function ChemTecSection() {
             },
           });
 
-          // Video scrub — desktop only
-          if (video && !isMobile) {
+          // Video scrub — both mobile and desktop
+          if (video) {
+            video.pause();
             const dur = (video.duration && video.duration > 0) ? video.duration : 6;
             const o = { t: 0 };
             tl.to(o, {
@@ -209,55 +201,56 @@ export default function ChemTecSection() {
         </div>
       </div>
 
-      {/* Reviews — desktop: lower-left (rendered first so mobile refs overwrite) */}
-      <div
-        className="absolute z-[5] pointer-events-none left-0 px-5 md:px-12 lg:px-16 hidden md:block"
-        style={{ width: "32%", bottom: "8%" }}
-      >
-        <div className="flex flex-col gap-3">
-          {REVIEWS.map((r, i) => (
-            <div
-              key={r.name}
-              ref={(el) => { reviewRefs.current[i] = el; }}
-              className="chemtec-review opacity-0 text-left"
-              style={{ willChange: "opacity, transform" }}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-orange text-sm tracking-wider">{STARS}</span>
-                <span className="text-ink/40 text-xs font-semibold">{r.name}</span>
+      {/* Reviews — single set, layout chosen by JS */}
+      {mounted && mobileRef.current ? (
+        <div
+          className="absolute z-[5] pointer-events-none inset-x-0 px-5"
+          style={{ top: "55%" }}
+        >
+          <div className="flex flex-col gap-2 max-w-sm mx-auto">
+            {REVIEWS.map((r, i) => (
+              <div
+                key={r.name}
+                ref={(el) => { reviewRefs.current[i] = el; }}
+                className="chemtec-review opacity-0 text-left"
+                style={{ willChange: "opacity, transform" }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-orange text-sm tracking-wider">{STARS}</span>
+                  <span className="text-ink/40 text-xs font-semibold">{r.name}</span>
+                </div>
+                <p className="text-ink/70 text-xs leading-snug italic">
+                  &ldquo;{r.text}&rdquo;
+                </p>
               </div>
-              <p className="text-ink/70 text-xs md:text-sm leading-snug italic">
-                &ldquo;{r.text}&rdquo;
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-
-      {/* Mobile reviews — centered (rendered second — refs overwrite desktop on mobile) */}
-      <div
-        className="absolute z-[5] pointer-events-none inset-x-0 px-5 md:hidden"
-        style={{ top: "55%" }}
-      >
-        <div className="flex flex-col gap-2 max-w-sm mx-auto">
-          {REVIEWS.map((r, i) => (
-            <div
-              key={r.name}
-              ref={(el) => { reviewRefs.current[i] = el; }}
-              className="chemtec-review opacity-0 text-left"
-              style={{ willChange: "opacity, transform" }}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-orange text-sm tracking-wider">{STARS}</span>
-                <span className="text-ink/40 text-xs font-semibold">{r.name}</span>
+      ) : (
+        <div
+          className="absolute z-[5] pointer-events-none left-0 px-5 md:px-12 lg:px-16"
+          style={{ width: "32%", bottom: "8%" }}
+        >
+          <div className="flex flex-col gap-3">
+            {REVIEWS.map((r, i) => (
+              <div
+                key={r.name}
+                ref={(el) => { reviewRefs.current[i] = el; }}
+                className="chemtec-review opacity-0 text-left"
+                style={{ willChange: "opacity, transform" }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-orange text-sm tracking-wider">{STARS}</span>
+                  <span className="text-ink/40 text-xs font-semibold">{r.name}</span>
+                </div>
+                <p className="text-ink/70 text-xs md:text-sm leading-snug italic">
+                  &ldquo;{r.text}&rdquo;
+                </p>
               </div>
-              <p className="text-ink/70 text-xs leading-snug italic">
-                &ldquo;{r.text}&rdquo;
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Text 3 — desktop: left-center | mobile: centered */}
       <div

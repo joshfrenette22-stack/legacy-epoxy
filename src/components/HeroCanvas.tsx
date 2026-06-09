@@ -39,15 +39,6 @@ export default function HeroCanvas() {
     setMounted(true);
   }, []);
 
-  // Mobile: manually start video autoplay
-  useEffect(() => {
-    if (!mounted || !mobileRef.current) return;
-    const video = videoRef.current;
-    if (!video) return;
-    video.loop = true;
-    video.play().catch(() => {});
-  }, [mounted]);
-
   // GSAP scroll-scrub — runs on BOTH mobile and desktop
   useEffect(() => {
     if (!mounted) return;
@@ -90,8 +81,9 @@ export default function HeroCanvas() {
             },
           });
 
-          // Video scrub — desktop only (iOS blocks programmatic seeking)
-          if (video && !isMobile) {
+          // Video scrub — both mobile and desktop
+          if (video) {
+            video.pause();
             const o = { t: 0 };
             tl.to(o, {
               t: dur,
@@ -163,7 +155,7 @@ export default function HeroCanvas() {
         preload="auto"
         poster="/images/hero-poster.jpg"
         className="absolute inset-0 w-full h-full object-cover z-[1]"
-        style={{ opacity: mounted && isMobile ? 0.7 : 1 }}
+        style={{ opacity: 1 }}
       />
 
       {/* Gradient overlays */}
@@ -218,47 +210,48 @@ export default function HeroCanvas() {
           </p>
         </div>
 
-        {/* Desktop: scattered absolute callouts (rendered first so mobile refs overwrite) */}
-        <div className="hidden md:block">
-          {CALLOUTS.map((label, i) => (
-            <div
-              key={label}
-              ref={(el) => { calloutRefs.current[i] = el; }}
-              className="callout-3d absolute pointer-events-auto opacity-0"
-              style={{
-                left: `${POSITIONS[i].x}%`,
-                top: `${POSITIONS[i].y}%`,
-                transform: "translate(-50%, -50%)",
-                willChange: "opacity, transform",
-                transformStyle: "preserve-3d",
-              }}
-            >
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 w-3 h-3 rounded-full bg-orange shadow-[0_0_12px_rgba(232,99,26,0.6)]" />
-              <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-px h-4 bg-gradient-to-b from-orange/80 to-transparent" />
-              <div className="feature-pill text-sm whitespace-nowrap shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-                {label}
-              </div>
+        {/* Single set of callouts — layout chosen by JS, not CSS media query */}
+        {mounted && isMobile ? (
+          <div className="absolute inset-x-0 top-[20%] bottom-[18%] flex items-center justify-center px-5">
+            <div className="flex flex-wrap justify-center gap-2.5 max-w-sm">
+              {CALLOUTS.map((label, i) => (
+                <div
+                  key={label}
+                  ref={(el) => { calloutRefs.current[i] = el; }}
+                  className="opacity-0"
+                  style={{ willChange: "opacity, transform" }}
+                >
+                  <div className="feature-pill text-xs whitespace-nowrap shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+                    {label}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        {/* Mobile: centered flex-wrap (rendered second — refs overwrite desktop on mobile) */}
-        <div className="md:hidden absolute inset-x-0 top-[20%] bottom-[18%] flex items-center justify-center px-5">
-          <div className="flex flex-wrap justify-center gap-2.5 max-w-sm">
+          </div>
+        ) : (
+          <>
             {CALLOUTS.map((label, i) => (
               <div
                 key={label}
                 ref={(el) => { calloutRefs.current[i] = el; }}
-                className="opacity-0"
-                style={{ willChange: "opacity, transform" }}
+                className="callout-3d absolute pointer-events-auto opacity-0"
+                style={{
+                  left: `${POSITIONS[i].x}%`,
+                  top: `${POSITIONS[i].y}%`,
+                  transform: "translate(-50%, -50%)",
+                  willChange: "opacity, transform",
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <div className="feature-pill text-xs whitespace-nowrap shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+                <div className="absolute left-1/2 -translate-x-1/2 -bottom-3 w-3 h-3 rounded-full bg-orange shadow-[0_0_12px_rgba(232,99,26,0.6)]" />
+                <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-px h-4 bg-gradient-to-b from-orange/80 to-transparent" />
+                <div className="feature-pill text-sm whitespace-nowrap shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
                   {label}
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </>
+        )}
 
         <div className="absolute bottom-[10%] md:bottom-[12%] left-1/2 -translate-x-1/2 pointer-events-auto">
           <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
