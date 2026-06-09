@@ -75,24 +75,7 @@ export default function HeroCanvas() {
     };
   }, [mounted, mobile, reduced]);
 
-  // Desktop: animate headline 1 in on load
-  useEffect(() => {
-    if (reduced || !ready || mobile) return;
-    const h1 = h1Ref.current;
-    if (!h1) return;
-
-    const timer = setTimeout(async () => {
-      const gsap = (await import("gsap")).default;
-      gsap.fromTo(h1,
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }
-      );
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [reduced, ready, mobile]);
-
-  // Desktop: GSAP scroll-scrub
+  // Desktop: all GSAP in one context to prevent conflicts
   useEffect(() => {
     if (reduced || !ready || mobile) return;
     const el = pinRef.current;
@@ -115,6 +98,13 @@ export default function HeroCanvas() {
       gsap.registerPlugin(ScrollTrigger);
 
       const ctx = gsap.context(() => {
+        // ── Entrance animation: h1 fades in on load (no scroll) ──
+        gsap.fromTo(h1,
+          { opacity: 0, y: 50 },
+          { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
+        );
+
+        // ── Scroll-scrub timeline ──
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: el,
@@ -141,21 +131,25 @@ export default function HeroCanvas() {
           }, 0);
         }
 
-        // ── PHASE 1: Headline 1 (already visible from entrance anim) ──
-        // Holds, then fades out — use fromTo so scroll timeline owns the state
-        tl.fromTo(h1, { opacity: 1, y: 0 }, { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.10);
+        // ── PHASE 1: Headline 1 fades out ──
+        // immediateRender:false prevents the scroll timeline from overriding the entrance anim
+        tl.fromTo(h1,
+          { opacity: 1, y: 0 },
+          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in", immediateRender: false },
+          0.10
+        );
 
-        // ── PHASE 2: Headline 2 ──
-        tl.fromTo(h2, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.22);
-        tl.to(h2, { opacity: 0, y: -30, duration: 0.06, ease: "power2.in" }, 0.40);
+        // ── PHASE 2: Headline 2 in then out ──
+        tl.fromTo(h2, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.24);
+        tl.to(h2, { opacity: 0, y: -30, duration: 0.06, ease: "power2.in" }, 0.42);
 
-        // ── PHASE 3: Feature callouts ──
-        tl.fromTo(h3, { opacity: 0 }, { opacity: 1, duration: 0.04 }, 0.50);
+        // ── PHASE 3: Feature callouts stagger in ──
+        tl.fromTo(h3, { opacity: 0 }, { opacity: 1, duration: 0.04 }, 0.52);
         callouts.forEach((callout, i) => {
           tl.fromTo(callout,
             { opacity: 0, scale: 0, rotateX: -20 },
             { opacity: 1, scale: 1, rotateX: 0, duration: 0.05, ease: "back.out(1.7)" },
-            0.52 + i * 0.025
+            0.54 + i * 0.025
           );
         });
 
