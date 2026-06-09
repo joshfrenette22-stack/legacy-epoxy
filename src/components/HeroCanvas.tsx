@@ -21,42 +21,40 @@ export default function HeroCanvas() {
   const h1Ref = useRef<HTMLDivElement>(null);
   const h2Ref = useRef<HTMLDivElement>(null);
   const h3Ref = useRef<HTMLDivElement>(null);
+  const fadeRef = useRef<HTMLDivElement>(null);
   const calloutRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [reduced, setReduced] = useState(false);
   const [ready, setReady] = useState(false);
-  const [mobile, setMobile] = useState(false);
+  const mobileRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Detect reduced motion + mobile
+  // Detect reduced motion + mobile on mount
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(mq.matches);
     const fn = (e: MediaQueryListEvent) => setReduced(e.matches);
     mq.addEventListener("change", fn);
 
-    const isMobile = window.innerWidth < 768 ||
+    mobileRef.current = window.innerWidth < 768 ||
       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    setMobile(isMobile);
+    setMounted(true);
 
     return () => mq.removeEventListener("change", fn);
   }, []);
 
-  // Desktop: wait for video to be seekable
-  // Mobile: skip video, just mark ready immediately
+  // Once mounted, handle video readiness
   useEffect(() => {
-    if (reduced) return;
+    if (!mounted || reduced) return;
 
-    // Mobile — no video needed, proceed immediately
-    if (mobile) {
+    // Mobile — no video, ready immediately
+    if (mobileRef.current) {
       setReady(true);
       return;
     }
 
     // Desktop — wait for video
     const video = videoRef.current;
-    if (!video) {
-      setReady(true);
-      return;
-    }
+    if (!video) { setReady(true); return; }
 
     let resolved = false;
     const markReady = () => {
@@ -66,21 +64,17 @@ export default function HeroCanvas() {
       setReady(true);
     };
 
-    if (video.readyState >= 2) {
-      markReady();
-      return;
-    }
+    if (video.readyState >= 2) { markReady(); return; }
 
     video.addEventListener("loadeddata", markReady);
     video.load();
-    // Fallback timeout
     const timeout = setTimeout(markReady, 3000);
 
     return () => {
       video.removeEventListener("loadeddata", markReady);
       clearTimeout(timeout);
     };
-  }, [reduced, mobile]);
+  }, [mounted, reduced]);
 
   // Animate headline 1 in on page load
   useEffect(() => {
@@ -106,12 +100,14 @@ export default function HeroCanvas() {
     const h1 = h1Ref.current;
     const h2 = h2Ref.current;
     const h3 = h3Ref.current;
+    const fade = fadeRef.current;
     const callouts = calloutRefs.current.filter(Boolean) as HTMLDivElement[];
-    if (!el || !h1 || !h2 || !h3 || callouts.length === 0) return;
+    if (!el || !h1 || !h2 || !h3 || !fade || callouts.length === 0) return;
 
+    const isMobile = mobileRef.current;
     const video = videoRef.current;
-    const canSeekVideo = !mobile && video && video.readyState >= 2;
-    const videoDuration = canSeekVideo ? (video!.duration || 3.5) : 3.5;
+    const canSeek = !isMobile && video && video.readyState >= 2;
+    const dur = canSeek ? (video!.duration || 3.5) : 3.5;
 
     let cleanup: (() => void) | undefined;
 
@@ -125,19 +121,19 @@ export default function HeroCanvas() {
           scrollTrigger: {
             trigger: el,
             start: "top top",
-            end: mobile ? "+=300%" : "+=400%",
+            end: isMobile ? "+=350%" : "+=450%",
             pin: true,
             scrub: 0.5,
             anticipatePin: 1,
           },
         });
 
-        // ── Phase 1: Video seek (desktop only) ──
-        if (canSeekVideo) {
+        // ── Phase 1: Video seek (desktop only, 0 → 0.4) ──
+        if (canSeek) {
           const o = { t: 0 };
           tl.to(o, {
-            t: videoDuration,
-            duration: 0.45,
+            t: dur,
+            duration: 0.4,
             ease: "none",
             onUpdate() {
               if (Math.abs(video!.currentTime - o.t) > 0.03) {
@@ -149,38 +145,49 @@ export default function HeroCanvas() {
 
         // Headline 1: fade out
         tl.to(h1,
-          { opacity: 0, y: -30, duration: 0.1, ease: "power2.in" }, 0.08);
+          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.07);
 
         // Headline 2: fade in
         tl.fromTo(h2,
           { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.25);
+          { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.22);
 
-        // ── Phase 2: Headline 2 out → callouts in ──
+        // ── Phase 2: Headline 2 out → callouts in (0.4 → 0.75) ──
         tl.to(h2,
-          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.48);
+          { opacity: 0, y: -30, duration: 0.06, ease: "power2.in" }, 0.42);
 
         // Callout overlay
         tl.fromTo(h3,
           { opacity: 0 },
-          { opacity: 1, duration: 0.06 }, 0.54);
+          { opacity: 1, duration: 0.04 }, 0.48);
 
         // Stagger callouts
         callouts.forEach((callout, i) => {
-          const delay = 0.58 + i * 0.035;
+          const delay = 0.50 + i * 0.028;
           tl.fromTo(callout,
             { opacity: 0, scale: 0, rotateX: -20 },
-            { opacity: 1, scale: 1, rotateX: 0, duration: 0.07, ease: "back.out(1.7)" },
+            { opacity: 1, scale: 1, rotateX: 0, duration: 0.06, ease: "back.out(1.7)" },
             delay
           );
         });
+
+        // ── Phase 3: Fade callouts + dark-to-light transition (0.75 → 1.0) ──
+        tl.to(h3,
+          { opacity: 0, duration: 0.08, ease: "power2.in" }, 0.78);
+
+        // White/cream fade overlay — dark → light transition
+        tl.fromTo(fade,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.18, ease: "power2.inOut" }, 0.82);
       });
 
       cleanup = () => ctx.revert();
     })();
 
     return () => cleanup?.();
-  }, [reduced, ready, mobile]);
+  }, [reduced, ready]);
+
+  const isMobile = mobileRef.current;
 
   // Reduced motion fallback
   if (reduced) {
@@ -212,14 +219,15 @@ export default function HeroCanvas() {
     );
   }
 
+  // SSR / pre-mount: render video version, will switch on mount if mobile
   return (
     <section
       ref={pinRef}
       className="relative overflow-hidden"
       style={{ background: "#0d1117", height: "100dvh" }}
     >
-      {/* Desktop: video with scroll seeking / Mobile: static poster image */}
-      {mobile ? (
+      {/* Desktop: video / Mobile: poster image */}
+      {mounted && isMobile ? (
         <img
           src="/images/hero-poster.jpg"
           alt="Epoxy floor installation"
@@ -296,8 +304,8 @@ export default function HeroCanvas() {
             ref={(el) => { calloutRefs.current[i] = el; }}
             className="callout-3d absolute pointer-events-auto opacity-0"
             style={{
-              left: `${mobile ? c.mobileX : c.x}%`,
-              top: `${mobile ? c.mobileY : c.y}%`,
+              left: `${mounted && isMobile ? c.mobileX : c.x}%`,
+              top: `${mounted && isMobile ? c.mobileY : c.y}%`,
               transform: "translate(-50%, -50%)",
               willChange: "opacity, transform",
               transformStyle: "preserve-3d",
@@ -316,8 +324,18 @@ export default function HeroCanvas() {
         </div>
       </div>
 
-      {/* Loading overlay — desktop only (waits for video) */}
-      {!ready && !mobile && (
+      {/* Phase 4: Dark-to-light transition overlay */}
+      <div
+        ref={fadeRef}
+        className="absolute inset-0 z-20 pointer-events-none opacity-0"
+        style={{
+          background: "linear-gradient(180deg, #faf7f1 0%, #faf7f1 100%)",
+          willChange: "opacity",
+        }}
+      />
+
+      {/* Loading overlay — desktop only */}
+      {!ready && !(mounted && isMobile) && (
         <div className="absolute inset-0 flex items-center justify-center z-30 bg-[#0d1117]">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-2 border-orange/30 border-t-orange rounded-full animate-spin" />
