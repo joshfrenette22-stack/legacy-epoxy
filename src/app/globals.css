@@ -25,26 +25,10 @@ body {
 }
 
 /* ── Hero scroll-scrub canvas ── */
-.hero-canvas-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  border-radius: 24px;
-  overflow: hidden;
-}
-
-@media (max-width: 768px) {
-  .hero-canvas-wrap {
-    border-radius: 0;
-    max-width: 100%;
-  }
-}
-
 .hero-canvas-wrap canvas {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 /* ── Feathered edge mask ── */

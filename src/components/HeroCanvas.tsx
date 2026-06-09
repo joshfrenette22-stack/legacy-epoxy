@@ -20,10 +20,26 @@ export default function HeroCanvas() {
   const headline2Ref = useRef<HTMLDivElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const currentFrameRef = useRef(0);
+  const canvasSizedRef = useRef(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  const drawFrame = useCallback((index: number) => {
+  const sizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvasSizedRef.current = true;
+    // Redraw current frame at new size
+    if (imagesRef.current.length > 0) {
+      drawFrameInternal(currentFrameRef.current);
+    }
+  }, []);
+
+  const drawFrameInternal = useCallback((index: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -31,12 +47,24 @@ export default function HeroCanvas() {
     const img = imagesRef.current[index];
     if (!img || !img.complete) return;
 
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
+    const cw = canvas.width;
+    const ch = canvas.height;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+
+    // "cover" — fill canvas, crop overflow
+    const scale = Math.max(cw / iw, ch / ih);
+    const sw = iw * scale;
+    const sh = ih * scale;
+    const sx = (cw - sw) / 2;
+    const sy = (ch - sh) / 2;
+
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(img, sx, sy, sw, sh);
     currentFrameRef.current = index;
   }, []);
+
+  const drawFrame = drawFrameInternal;
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -46,43 +74,45 @@ export default function HeroCanvas() {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // Size canvas to viewport
+  useEffect(() => {
+    if (reducedMotion) return;
+    sizeCanvas();
+    const onResize = () => sizeCanvas();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [reducedMotion, sizeCanvas]);
+
   useEffect(() => {
     if (reducedMotion) return;
 
-    // Preload all frames
     let loadedCount = 0;
     const images: HTMLImageElement[] = [];
 
     for (let i = 1; i <= TOTAL_FRAMES; i++) {
       const img = new Image();
       img.src = FRAME_PATH(i);
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === TOTAL_FRAMES) {
-          setLoaded(true);
-          drawFrame(0);
-        }
-      };
-      img.onerror = () => {
-        loadedCount++;
-        if (loadedCount === TOTAL_FRAMES) {
-          setLoaded(true);
-          drawFrame(0);
-        }
-      };
       images.push(img);
     }
     imagesRef.current = images;
 
-    // Draw first frame immediately once it loads
-    if (images[0]) {
-      images[0].onload = () => {
-        drawFrame(0);
+    // Draw first frame as soon as it loads
+    images[0].onload = () => {
+      drawFrame(0);
+      loadedCount++;
+      if (loadedCount === TOTAL_FRAMES) setLoaded(true);
+    };
+
+    // Track all other frames loading
+    for (let i = 1; i < images.length; i++) {
+      const onDone = () => {
         loadedCount++;
         if (loadedCount === TOTAL_FRAMES) {
           setLoaded(true);
         }
       };
+      images[i].onload = onDone;
+      images[i].onerror = onDone;
     }
   }, [reducedMotion, drawFrame]);
 
@@ -96,47 +126,48 @@ export default function HeroCanvas() {
     if (!section || !wrap || !h1 || !h2) return;
 
     const ctx = gsap.context(() => {
+      const obj = { frame: 0 };
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: "top top",
           end: "+=200%",
           pin: true,
-          scrub: 0.5,
+          scrub: 1.5, // higher = smoother interpolation
           anticipatePin: 1,
         },
       });
 
-      // Frame scrub
+      // Frame scrub — no snap for smooth playback
       tl.to(
-        { frame: 0 },
+        obj,
         {
           frame: TOTAL_FRAMES - 1,
           ease: "none",
-          snap: "frame",
-          onUpdate: function () {
-            const idx = Math.round(this.targets()[0].frame);
+          onUpdate: () => {
+            const idx = Math.round(obj.frame);
             if (idx !== currentFrameRef.current) {
-              requestAnimationFrame(() => drawFrame(idx));
+              drawFrame(idx);
             }
           },
         },
         0
       );
 
-      // Scale + perspective zoom
+      // Scale zoom: starts slightly pulled back, fills screen
       tl.fromTo(
         wrap,
-        { scale: 0.86, transformOrigin: "center center" },
+        { scale: 0.88, transformOrigin: "center center" },
         { scale: 1, ease: "none" },
         0
       );
 
-      // Headline 1: visible at start, fades out by 40%
-      tl.fromTo(h1, { opacity: 1 }, { opacity: 0, duration: 0.35 }, 0.15);
+      // Headline 1: visible at start, fades out by ~40%
+      tl.fromTo(h1, { opacity: 1 }, { opacity: 0, duration: 0.3 }, 0.1);
 
-      // Headline 2: fades in at 50%, stays
-      tl.fromTo(h2, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.5);
+      // Headline 2: fades in at 50%
+      tl.fromTo(h2, { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.5);
     });
 
     return () => ctx.revert();
@@ -164,7 +195,6 @@ export default function HeroCanvas() {
             </a>
           </div>
         </div>
-        {/* Static poster */}
         <div className="absolute inset-0 z-0">
           <img
             src="/images/hero-poster.jpg"
@@ -177,19 +207,20 @@ export default function HeroCanvas() {
   }
 
   return (
-    <section ref={sectionRef} className="hero-bg relative min-h-screen">
+    <section ref={sectionRef} className="hero-bg relative h-screen overflow-hidden">
       {/* Glow behind canvas */}
       <div className="hero-glow" />
 
-      {/* Canvas container */}
+      {/* Full-screen canvas container */}
       <div
         ref={wrapRef}
-        className="hero-canvas-wrap hero-canvas-mask relative mx-auto"
+        className="absolute inset-0 hero-canvas-mask"
         style={{ willChange: "transform" }}
       >
         <canvas
           ref={canvasRef}
-          className="w-full h-auto block"
+          className="w-full h-full object-cover block"
+          style={{ objectFit: "cover" }}
           aria-hidden="true"
         />
         <div className="hero-vignette" />
