@@ -51,8 +51,8 @@ export default function QuoteForm() {
             <path d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-2xl font-bold text-cream mb-2">Quote request sent!</h3>
-        <p className="text-cream/60 text-lg">
+        <h3 className="text-2xl font-bold text-ink mb-2">Quote request sent!</h3>
+        <p className="text-ink/60 text-lg">
           We&apos;ll call you within one business day.
         </p>
       </div>
@@ -63,7 +63,7 @@ export default function QuoteForm() {
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-cream/70 mb-1.5">
+          <label htmlFor="name" className="block text-sm font-medium text-ink/70 mb-1.5">
             Name <span className="text-orange">*</span>
           </label>
           <input
@@ -72,12 +72,12 @@ export default function QuoteForm() {
             type="text"
             required
             autoComplete="name"
-            className="form-input"
+            className="form-input-light"
             placeholder="Your name"
           />
         </div>
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-cream/70 mb-1.5">
+          <label htmlFor="phone" className="block text-sm font-medium text-ink/70 mb-1.5">
             Phone <span className="text-orange">*</span>
           </label>
           <input
@@ -86,7 +86,7 @@ export default function QuoteForm() {
             type="tel"
             required
             autoComplete="tel"
-            className="form-input"
+            className="form-input-light"
             placeholder="(970) 555-1234"
           />
         </div>
@@ -94,7 +94,7 @@ export default function QuoteForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-cream/70 mb-1.5">
+          <label htmlFor="email" className="block text-sm font-medium text-ink/70 mb-1.5">
             Email <span className="text-orange">*</span>
           </label>
           <input
@@ -103,12 +103,12 @@ export default function QuoteForm() {
             type="email"
             required
             autoComplete="email"
-            className="form-input"
+            className="form-input-light"
             placeholder="you@email.com"
           />
         </div>
         <div>
-          <label htmlFor="zip" className="block text-sm font-medium text-cream/70 mb-1.5">
+          <label htmlFor="zip" className="block text-sm font-medium text-ink/70 mb-1.5">
             ZIP / City <span className="text-orange">*</span>
           </label>
           <input
@@ -117,21 +117,21 @@ export default function QuoteForm() {
             type="text"
             required
             autoComplete="postal-code"
-            className="form-input"
+            className="form-input-light"
             placeholder="80525 or Fort Collins"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="projectType" className="block text-sm font-medium text-cream/70 mb-1.5">
+        <label htmlFor="projectType" className="block text-sm font-medium text-ink/70 mb-1.5">
           Project Type <span className="text-orange">*</span>
         </label>
         <select
           id="projectType"
           name="projectType"
           required
-          className="form-input appearance-none"
+          className="form-input-light appearance-none"
           defaultValue=""
         >
           <option value="" disabled>
@@ -146,20 +146,20 @@ export default function QuoteForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-cream/70 mb-1.5">
-          Message <span className="text-cream/30">(optional)</span>
+        <label htmlFor="message" className="block text-sm font-medium text-ink/70 mb-1.5">
+          Message <span className="text-ink/30">(optional)</span>
         </label>
         <textarea
           id="message"
           name="message"
           rows={3}
-          className="form-input resize-none"
+          className="form-input-light resize-none"
           placeholder="Anything else we should know?"
         />
       </div>
 
       {status === "error" && (
-        <p className="text-red-400 text-sm" role="alert">
+        <p className="text-red-600 text-sm" role="alert">
           {errorMsg}
         </p>
       )}
@@ -172,7 +172,7 @@ export default function QuoteForm() {
         {status === "loading" ? "Sending…" : "Get My Free Quote"}
       </button>
 
-      <p className="text-center text-sm text-cream/40">
+      <p className="text-center text-sm text-ink/40">
         No obligation. We&apos;ll call within one business day.
       </p>
     </form>

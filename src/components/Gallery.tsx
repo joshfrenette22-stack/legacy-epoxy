@@ -8,16 +8,16 @@ const cards = [
 export default function Gallery() {
   return (
     <section id="gallery" className="relative py-24 md:py-32 overflow-hidden"
-      style={{ background: "linear-gradient(180deg, #0d1117 0%, #151c26 50%, #0d1117 100%)" }}>
+      style={{ background: "var(--color-cream)" }}>
 
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <div className="text-center mb-16 md:mb-24" data-reveal>
           <p className="text-orange text-sm font-semibold tracking-[0.2em] uppercase mb-4">
             Gallery
           </p>
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-cream tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-ink tracking-tight leading-tight">
             Every surface.{" "}
-            <span className="font-serif italic text-cream/80">Every detail.</span>
+            <span className="font-serif italic text-ink/70">Every detail.</span>
           </h2>
         </div>
 

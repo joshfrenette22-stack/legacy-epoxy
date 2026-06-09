@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 const steps = [
   {
     num: "01",
@@ -22,15 +26,54 @@ const steps = [
 ];
 
 export default function HowItWorks() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const handleScroll = () => {
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // 0 when section top enters viewport, 1 when section is fully in view
+      const p = Math.min(1, Math.max(0, (vh - rect.top) / (vh + rect.height * 0.3)));
+      setProgress(p);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const blur = Math.max(0, 12 - progress * 12);
+  const scale = 1.08 - progress * 0.08;
+
   return (
     <section
+      ref={sectionRef}
       id="process"
       className="relative py-24 md:py-32 overflow-hidden"
       style={{ background: "var(--color-cream)", color: "var(--color-navy)" }}
     >
-      {/* Top transition */}
-      <div className="absolute inset-x-0 top-0 h-32 pointer-events-none"
-        style={{ background: "linear-gradient(to bottom, #151c26, var(--color-cream))" }} />
+      {/* Full-width background image with aperture blur effect */}
+      <img
+        ref={imgRef}
+        src="/images/epoxy-surface-bg.webp"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        style={{
+          opacity: 0.45,
+          filter: `blur(${blur}px)`,
+          transform: `scale(${scale})`,
+          transition: "filter 0.1s ease-out, transform 0.1s ease-out",
+          willChange: "filter, transform",
+        }}
+      />
+      {/* Cream overlay for readability */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "linear-gradient(180deg, rgba(250,247,241,0.7) 0%, rgba(250,247,241,0.5) 50%, rgba(250,247,241,0.7) 100%)" }} />
 
       <div className="mx-auto max-w-6xl px-5 md:px-8 relative">
         <div className="text-center mb-16 md:mb-24" data-reveal>
@@ -58,10 +101,6 @@ export default function HowItWorks() {
           ))}
         </div>
       </div>
-
-      {/* Bottom transition */}
-      <div className="absolute inset-x-0 bottom-0 h-32 pointer-events-none"
-        style={{ background: "linear-gradient(to top, #0d1117, var(--color-cream))" }} />
     </section>
   );
 }
