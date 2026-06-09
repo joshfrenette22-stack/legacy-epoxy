@@ -165,7 +165,7 @@ export default function HeroCanvas() {
             1 of 1 — Only certified ChemTec installer · 10-year warranty
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
-            A garage floor <span className="font-serif italic">built to outlast</span> the house.
+            A garage floor <span className="font-serif italic text-orange">built to outlast</span> the house.
           </h1>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
@@ -179,7 +179,7 @@ export default function HeroCanvas() {
         <div className="pointer-events-auto">
           <p className="text-lg md:text-xl text-cream/70 font-bold mb-2">Not a coating.</p>
           <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
-            <span className="font-serif italic">A finished surface.</span>
+            <span className="font-serif italic text-orange">A finished surface.</span>
           </h2>
         </div>
       </div>

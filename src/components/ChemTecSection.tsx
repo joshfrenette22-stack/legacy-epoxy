@@ -166,7 +166,7 @@ export default function ChemTecSection() {
           </p>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
             The science behind{" "}
-            <span className="font-serif italic">the surface.</span>
+            <span className="font-serif italic text-orange">the surface.</span>
           </h2>
           <p className="mt-4 text-sm md:text-base text-ink/60 max-w-md leading-relaxed">
             We&apos;re Northern Colorado&apos;s only certified ChemTec installer.
@@ -184,7 +184,7 @@ export default function ChemTecSection() {
         <div className="chemtec-card pointer-events-auto max-w-sm md:max-w-none text-center md:text-right">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
             Engineered for{" "}
-            <span className="font-serif italic">extremes.</span>
+            <span className="font-serif italic text-orange">extremes.</span>
           </h2>
           <p className="mt-4 text-sm md:text-base text-ink/60 max-w-md md:ml-auto leading-relaxed">
             Hot tires. Road salt. Gasoline. Brake fluid.
@@ -257,7 +257,7 @@ export default function ChemTecSection() {
         <div className="chemtec-card pointer-events-auto max-w-sm md:max-w-none text-center md:text-left">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
             Built to last{" "}
-            <span className="font-serif italic">a lifetime.</span>
+            <span className="font-serif italic text-orange">a lifetime.</span>
           </h2>
           <p className="mt-4 text-sm md:text-base text-ink/60 max-w-md leading-relaxed">
             Every install comes with a 10-year warranty backed by ChemTec.

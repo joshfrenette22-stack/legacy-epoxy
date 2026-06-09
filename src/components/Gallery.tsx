@@ -17,7 +17,7 @@ export default function Gallery() {
           </p>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-ink tracking-tight leading-tight">
             Every surface.{" "}
-            <span className="font-serif italic text-ink/70">Every detail.</span>
+            <span className="font-serif italic text-orange">Every detail.</span>
           </h2>
         </div>
 

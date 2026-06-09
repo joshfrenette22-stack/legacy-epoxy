@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Instrument_Serif } from "next/font/google";
+import { Hanken_Grotesk, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const hanken = Hanken_Grotesk({
@@ -8,10 +8,9 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
-const instrument = Instrument_Serif({
+const playfair = Playfair_Display({
   variable: "--font-instrument",
   subsets: ["latin"],
-  weight: "400",
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -40,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${hanken.variable} ${instrument.variable} antialiased`}
+      className={`${hanken.variable} ${playfair.variable} antialiased`}
     >
       <body className="min-h-dvh font-sans">{children}</body>
     </html>

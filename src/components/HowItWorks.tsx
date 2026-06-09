@@ -82,7 +82,7 @@ export default function HowItWorks() {
           </p>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
             Four steps to a{" "}
-            <span className="font-serif italic">finished surface.</span>
+            <span className="font-serif italic text-orange">finished surface.</span>
           </h2>
         </div>
 
