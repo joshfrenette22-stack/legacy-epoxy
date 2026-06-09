@@ -17,111 +17,125 @@ export default function ChemTecSection() {
   const t2Ref = useRef<HTMLDivElement>(null);
   const t3Ref = useRef<HTMLDivElement>(null);
   const reviewRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [mobile, setMobile] = useState(false);
+  const mobileRef = useRef(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 768 ||
+    mobileRef.current = window.innerWidth < 768 ||
       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    setMobile(isMobile);
     setMounted(true);
   }, []);
+
+  // Mobile: manually start video autoplay
+  useEffect(() => {
+    if (!mounted || !mobileRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.loop = true;
+    video.play().catch(() => {});
+  }, [mounted]);
 
   // GSAP scroll-scrub — runs on BOTH mobile and desktop
   useEffect(() => {
     if (!mounted) return;
-    const el = pinRef.current;
-    const t1 = t1Ref.current;
-    const t2 = t2Ref.current;
-    const t3 = t3Ref.current;
-    const reviews = reviewRefs.current.filter(Boolean) as HTMLDivElement[];
-    if (!el || !t1 || !t2 || !t3) return;
+    const isMobile = mobileRef.current;
 
-    const video = videoRef.current;
+    const raf = requestAnimationFrame(() => {
+      const el = pinRef.current;
+      const t1 = t1Ref.current;
+      const t2 = t2Ref.current;
+      const t3 = t3Ref.current;
+      const reviews = reviewRefs.current.filter(Boolean) as HTMLDivElement[];
+      if (!el || !t1 || !t2 || !t3) return;
 
-    let cleanup: (() => void) | undefined;
+      const video = videoRef.current;
 
-    (async () => {
-      const gsap = (await import("gsap")).default;
-      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
-      gsap.registerPlugin(ScrollTrigger);
+      (async () => {
+        const gsap = (await import("gsap")).default;
+        const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+        gsap.registerPlugin(ScrollTrigger);
 
-      const ctx = gsap.context(() => {
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: el,
-            start: "top top",
-            end: mobile ? "+=350%" : "+=500%",
-            pin: true,
-            scrub: mobile ? 0.3 : 0.5,
-            anticipatePin: 1,
-          },
+        const ctx = gsap.context(() => {
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: el,
+              start: "top top",
+              end: isMobile ? "+=350%" : "+=500%",
+              pin: true,
+              scrub: isMobile ? 0.3 : 0.5,
+              anticipatePin: 1,
+            },
+          });
+
+          // Video scrub — desktop only
+          if (video && !isMobile) {
+            const dur = (video.duration && video.duration > 0) ? video.duration : 6;
+            const o = { t: 0 };
+            tl.to(o, {
+              t: dur,
+              duration: 1,
+              ease: "none",
+              onUpdate() {
+                if (video.readyState >= 2 && Math.abs(video.currentTime - o.t) > 0.03) {
+                  video.currentTime = o.t;
+                }
+              },
+            }, 0);
+          }
+
+          if (isMobile) {
+            // Mobile: centered text, slide up/down
+            tl.fromTo(t1, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.1, ease: "power3.out" }, 0.03);
+            tl.to(t1, { opacity: 0, y: -40, duration: 0.08, ease: "power2.in" }, 0.28);
+
+            tl.fromTo(t2, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.1, ease: "power3.out" }, 0.36);
+            reviews.forEach((review, i) => {
+              tl.fromTo(review,
+                { opacity: 0, y: 20, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.06, ease: "power2.out" },
+                0.42 + i * 0.03
+              );
+            });
+            tl.to(t2, { opacity: 0, y: -40, duration: 0.08, ease: "power2.in" }, 0.61);
+            reviews.forEach((review) => {
+              tl.to(review, { opacity: 0, duration: 0.06, ease: "power2.in" }, 0.61);
+            });
+
+            tl.fromTo(t3, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.1, ease: "power3.out" }, 0.68);
+            tl.to(t3, { opacity: 0, y: -40, duration: 0.06, ease: "power2.in" }, 0.92);
+          } else {
+            // Desktop: left/right slide
+            tl.fromTo(t1, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.03);
+            tl.to(t1, { opacity: 0, x: -60, duration: 0.08, ease: "power2.in" }, 0.28);
+
+            tl.fromTo(t2, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.36);
+            reviews.forEach((review, i) => {
+              tl.fromTo(review,
+                { opacity: 0, y: 20, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 0.06, ease: "power2.out" },
+                0.42 + i * 0.03
+              );
+            });
+            tl.to(t2, { opacity: 0, x: 60, duration: 0.08, ease: "power2.in" }, 0.61);
+            reviews.forEach((review) => {
+              tl.to(review, { opacity: 0, duration: 0.06, ease: "power2.in" }, 0.61);
+            });
+
+            tl.fromTo(t3, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.68);
+            tl.to(t3, { opacity: 0, x: -60, duration: 0.06, ease: "power2.in" }, 0.92);
+          }
         });
 
-        // Video scrub — desktop only
-        if (video && !mobile) {
-          const dur = (video.duration && video.duration > 0) ? video.duration : 6;
-          const o = { t: 0 };
-          tl.to(o, {
-            t: dur,
-            duration: 1,
-            ease: "none",
-            onUpdate() {
-              if (video.readyState >= 2 && Math.abs(video.currentTime - o.t) > 0.03) {
-                video.currentTime = o.t;
-              }
-            },
-          }, 0);
-        }
+        cleanupRef.current = () => ctx.revert();
+      })();
+    });
 
-        if (mobile) {
-          // Mobile: centered text, slide up/down
-          tl.fromTo(t1, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.1, ease: "power3.out" }, 0.03);
-          tl.to(t1, { opacity: 0, y: -40, duration: 0.08, ease: "power2.in" }, 0.28);
-
-          tl.fromTo(t2, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.1, ease: "power3.out" }, 0.36);
-          reviews.forEach((review, i) => {
-            tl.fromTo(review,
-              { opacity: 0, y: 20, scale: 0.95 },
-              { opacity: 1, y: 0, scale: 1, duration: 0.06, ease: "power2.out" },
-              0.42 + i * 0.03
-            );
-          });
-          tl.to(t2, { opacity: 0, y: -40, duration: 0.08, ease: "power2.in" }, 0.61);
-          reviews.forEach((review) => {
-            tl.to(review, { opacity: 0, duration: 0.06, ease: "power2.in" }, 0.61);
-          });
-
-          tl.fromTo(t3, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.1, ease: "power3.out" }, 0.68);
-          tl.to(t3, { opacity: 0, y: -40, duration: 0.06, ease: "power2.in" }, 0.92);
-        } else {
-          // Desktop: left/right slide
-          tl.fromTo(t1, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.03);
-          tl.to(t1, { opacity: 0, x: -60, duration: 0.08, ease: "power2.in" }, 0.28);
-
-          tl.fromTo(t2, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.36);
-          reviews.forEach((review, i) => {
-            tl.fromTo(review,
-              { opacity: 0, y: 20, scale: 0.95 },
-              { opacity: 1, y: 0, scale: 1, duration: 0.06, ease: "power2.out" },
-              0.42 + i * 0.03
-            );
-          });
-          tl.to(t2, { opacity: 0, x: 60, duration: 0.08, ease: "power2.in" }, 0.61);
-          reviews.forEach((review) => {
-            tl.to(review, { opacity: 0, duration: 0.06, ease: "power2.in" }, 0.61);
-          });
-
-          tl.fromTo(t3, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.68);
-          tl.to(t3, { opacity: 0, x: -60, duration: 0.06, ease: "power2.in" }, 0.92);
-        }
-      });
-
-      cleanup = () => ctx.revert();
-    })();
-
-    return () => cleanup?.();
-  }, [mounted, mobile]);
+    const cleanupRef = { current: undefined as (() => void) | undefined };
+    return () => {
+      cancelAnimationFrame(raf);
+      cleanupRef.current?.();
+    };
+  }, [mounted]);
 
   // ── Single render for both mobile and desktop ──
   return (
@@ -130,15 +144,12 @@ export default function ChemTecSection() {
       className="relative overflow-hidden"
       style={{ height: "100dvh", background: "#faf7f1" }}
     >
-      {/* Desktop: scroll-scrubbed video | Mobile: autoplay loop */}
       <video
         ref={videoRef}
         src="/chemtec.mp4"
         muted
         playsInline
         preload="auto"
-        autoPlay={mobile}
-        loop={mobile}
         className="absolute inset-0 w-full h-full object-cover z-[1]"
       />
 
@@ -157,8 +168,8 @@ export default function ChemTecSection() {
       {/* Text 1 — desktop: left-aligned card | mobile: centered card */}
       <div
         ref={t1Ref}
-        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:left-0 px-5 md:px-12 lg:px-16 flex items-start md:items-start justify-center md:justify-start"
-        style={{ willChange: "opacity, transform", top: "12%", width: mobile ? "100%" : "44%" }}
+        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:left-0 px-5 md:px-12 lg:px-16 flex items-start md:items-start justify-center md:justify-start w-full md:w-[44%]"
+        style={{ willChange: "opacity, transform", top: "12%" }}
       >
         <div className="chemtec-card pointer-events-auto max-w-sm md:max-w-none text-center md:text-left">
           <p className="text-orange text-xs md:text-sm font-semibold tracking-[0.25em] uppercase mb-4">
@@ -178,8 +189,8 @@ export default function ChemTecSection() {
       {/* Text 2 — desktop: right-aligned card | mobile: centered card */}
       <div
         ref={t2Ref}
-        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:right-0 px-5 md:px-12 lg:px-16 flex items-end md:items-end justify-center md:justify-end"
-        style={{ willChange: "opacity, transform", bottom: "10%", width: mobile ? "100%" : "44%" }}
+        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:right-0 px-5 md:px-12 lg:px-16 flex items-end md:items-end justify-center md:justify-end w-full md:w-[44%]"
+        style={{ willChange: "opacity, transform", bottom: "10%" }}
       >
         <div className="chemtec-card pointer-events-auto max-w-sm md:max-w-none text-center md:text-right">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
@@ -198,7 +209,7 @@ export default function ChemTecSection() {
         </div>
       </div>
 
-      {/* Reviews — desktop: lower-left | mobile: centered below text 2 area */}
+      {/* Reviews — desktop: lower-left (rendered first so mobile refs overwrite) */}
       <div
         className="absolute z-[5] pointer-events-none left-0 px-5 md:px-12 lg:px-16 hidden md:block"
         style={{ width: "32%", bottom: "8%" }}
@@ -207,7 +218,7 @@ export default function ChemTecSection() {
           {REVIEWS.map((r, i) => (
             <div
               key={r.name}
-              ref={(el) => { if (!mobile) reviewRefs.current[i] = el; }}
+              ref={(el) => { reviewRefs.current[i] = el; }}
               className="chemtec-review opacity-0 text-left"
               style={{ willChange: "opacity, transform" }}
             >
@@ -223,7 +234,7 @@ export default function ChemTecSection() {
         </div>
       </div>
 
-      {/* Mobile reviews — centered, below mid-screen */}
+      {/* Mobile reviews — centered (rendered second — refs overwrite desktop on mobile) */}
       <div
         className="absolute z-[5] pointer-events-none inset-x-0 px-5 md:hidden"
         style={{ top: "55%" }}
@@ -232,7 +243,7 @@ export default function ChemTecSection() {
           {REVIEWS.map((r, i) => (
             <div
               key={r.name}
-              ref={(el) => { if (mobile) reviewRefs.current[i] = el; }}
+              ref={(el) => { reviewRefs.current[i] = el; }}
               className="chemtec-review opacity-0 text-left"
               style={{ willChange: "opacity, transform" }}
             >
@@ -251,8 +262,8 @@ export default function ChemTecSection() {
       {/* Text 3 — desktop: left-center | mobile: centered */}
       <div
         ref={t3Ref}
-        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:left-0 px-5 md:px-12 lg:px-16 flex items-center justify-center md:justify-start"
-        style={{ willChange: "opacity, transform", width: mobile ? "100%" : "44%", top: "50%", transform: "translateY(-50%)" }}
+        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:left-0 px-5 md:px-12 lg:px-16 flex items-center justify-center md:justify-start w-full md:w-[44%]"
+        style={{ willChange: "opacity, transform", top: "50%", transform: "translateY(-50%)" }}
       >
         <div className="chemtec-card pointer-events-auto max-w-sm md:max-w-none text-center md:text-left">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
