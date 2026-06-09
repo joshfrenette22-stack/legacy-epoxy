@@ -9,20 +9,7 @@ export default function Footer() {
           {/* Logo + tagline */}
           <div>
             <div className="flex items-center gap-2.5 mb-3">
-              <svg
-                viewBox="0 0 32 36"
-                fill="none"
-                className="h-7 w-6 text-orange"
-                aria-hidden="true"
-              >
-                <path
-                  d="M16 0C8 0 2 6 2 14v10c0 2 0.5 4 1.5 5.5L8 36h4l-3-5c1.5 1 3.5 1.5 5.5 1.5h3c2 0 4-0.5 5.5-1.5L20 36h4l4.5-6.5C29.5 28 30 26 30 24V14c0-8-6-14-14-14zm-6 12c0-1 1-2 2-2h8c1 0 2 1 2 2v8c0 3-2 6-6 7-4-1-6-4-6-7v-8z"
-                  fill="currentColor"
-                />
-              </svg>
-              <span className="text-lg font-bold tracking-tight text-cream">
-                LEGACY <span className="text-orange">EPOXY</span>
-              </span>
+              <img src="/logo-white.svg" alt="Legacy Epoxy" className="h-8" />
             </div>
             <p className="text-sm text-cream/40 max-w-xs">
               Northern Colorado&apos;s only certified ChemTec installer. 10-year warranty on every surface.

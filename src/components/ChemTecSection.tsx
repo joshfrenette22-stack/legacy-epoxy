@@ -62,7 +62,7 @@ export default function ChemTecSection() {
               start: "top top",
               end: isMobile ? "+=350%" : "+=500%",
               pin: true,
-              scrub: isMobile ? 0.3 : 0.5,
+              scrub: isMobile ? 0.6 : 0.5,
               anticipatePin: 1,
             },
           });

@@ -96,30 +96,31 @@ body {
 
 /* Frosted card for readability over video */
 .chemtec-card {
-  background: rgba(250, 247, 241, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(250, 247, 241, 0.94);
   border-radius: 20px;
   padding: 1.5rem;
   border: 1px solid rgba(13, 17, 23, 0.06);
   box-shadow: 0 4px 40px rgba(0, 0, 0, 0.06);
+  will-change: transform, opacity;
 }
 
 @media (min-width: 768px) {
   .chemtec-card {
+    background: rgba(250, 247, 241, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     padding: 2rem 2.25rem;
   }
 }
 
 /* Review card */
 .chemtec-review {
-  background: rgba(250, 247, 241, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(250, 247, 241, 0.92);
   border-radius: 14px;
   padding: 0.875rem 1.125rem;
   border: 1px solid rgba(13, 17, 23, 0.06);
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+  will-change: transform, opacity;
 }
 
 /* ── Reduced motion ── */
