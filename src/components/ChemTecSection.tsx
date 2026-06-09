@@ -26,6 +26,15 @@ export default function ChemTecSection() {
     setMounted(true);
   }, []);
 
+  // Mobile: autoplay video (iOS blocks programmatic seeking)
+  useEffect(() => {
+    if (!mounted || !mobileRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.loop = true;
+    video.play().catch(() => {});
+  }, [mounted]);
+
   // GSAP scroll-scrub — runs on BOTH mobile and desktop
   useEffect(() => {
     if (!mounted) return;
@@ -58,9 +67,8 @@ export default function ChemTecSection() {
             },
           });
 
-          // Video scrub — both mobile and desktop
-          if (video) {
-            video.pause();
+          // Video scrub — desktop only (iOS blocks programmatic seeking)
+          if (video && !isMobile) {
             const dur = (video.duration && video.duration > 0) ? video.duration : 6;
             const o = { t: 0 };
             tl.to(o, {

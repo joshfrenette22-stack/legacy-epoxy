@@ -39,6 +39,15 @@ export default function HeroCanvas() {
     setMounted(true);
   }, []);
 
+  // Mobile: autoplay video (iOS blocks programmatic seeking)
+  useEffect(() => {
+    if (!mounted || !mobileRef.current) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.loop = true;
+    video.play().catch(() => {});
+  }, [mounted]);
+
   // GSAP scroll-scrub — runs on BOTH mobile and desktop
   useEffect(() => {
     if (!mounted) return;
@@ -81,9 +90,8 @@ export default function HeroCanvas() {
             },
           });
 
-          // Video scrub — both mobile and desktop
-          if (video) {
-            video.pause();
+          // Video scrub — desktop only (iOS blocks programmatic seeking)
+          if (video && !isMobile) {
             const o = { t: 0 };
             tl.to(o, {
               t: dur,
@@ -155,7 +163,7 @@ export default function HeroCanvas() {
         preload="auto"
         poster="/images/hero-poster.jpg"
         className="absolute inset-0 w-full h-full object-cover z-[1]"
-        style={{ opacity: 1 }}
+        style={{ opacity: mounted && isMobile ? 0.7 : 1 }}
       />
 
       {/* Gradient overlays */}

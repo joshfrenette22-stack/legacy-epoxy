@@ -12,6 +12,9 @@ export default function ScrollReveal() {
   useEffect(() => {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
+    // Also clear after GSAP ScrollTrigger may have initialized
+    const t = setTimeout(() => window.scrollTo(0, 0), 100);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
