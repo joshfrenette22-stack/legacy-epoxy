@@ -75,7 +75,7 @@ export default function HeroCanvas() {
     };
   }, [mounted, mobile, reduced]);
 
-  // Desktop: all GSAP in one context to prevent conflicts
+  // Desktop: GSAP scroll-scrub (entrance is CSS-only, no conflicts)
   useEffect(() => {
     if (reduced || !ready || mobile) return;
     const el = pinRef.current;
@@ -98,13 +98,6 @@ export default function HeroCanvas() {
       gsap.registerPlugin(ScrollTrigger);
 
       const ctx = gsap.context(() => {
-        // ── Entrance animation: h1 fades in on load (no scroll) ──
-        gsap.fromTo(h1,
-          { opacity: 0, y: 50 },
-          { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.3 }
-        );
-
-        // ── Scroll-scrub timeline ──
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: el,
@@ -131,13 +124,8 @@ export default function HeroCanvas() {
           }, 0);
         }
 
-        // ── PHASE 1: Headline 1 fades out ──
-        // immediateRender:false prevents the scroll timeline from overriding the entrance anim
-        tl.fromTo(h1,
-          { opacity: 1, y: 0 },
-          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in", immediateRender: false },
-          0.10
-        );
+        // ── PHASE 1: Headline 1 fades out (starts visible via CSS animation) ──
+        tl.to(h1, { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.10);
 
         // ── PHASE 2: Headline 2 in then out ──
         tl.fromTo(h2, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.24);
@@ -273,8 +261,8 @@ export default function HeroCanvas() {
       <div className="hero-gradient absolute inset-0 z-[2]"
         style={{ background: "radial-gradient(ellipse 75% 65% at 50% 50%, transparent 50%, rgba(13,17,23,0.55) 100%)" }} />
 
-      {/* Headline 1 */}
-      <div ref={h1Ref} className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
+      {/* Headline 1 — CSS entrance animation, GSAP only handles scroll-out */}
+      <div ref={h1Ref} className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center px-5 pointer-events-none hero-h1-enter" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <div className="warranty-chip mb-6">
             <span className="w-2 h-2 rounded-full bg-orange inline-block" />

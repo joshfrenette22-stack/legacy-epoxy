@@ -1,8 +1,8 @@
 const cards = [
-  { title: "Garage", desc: "The classic — high-gloss, hot-tire-proof, built to impress." },
-  { title: "Basement", desc: "Transform cold concrete into a finished living space." },
-  { title: "Pool Deck", desc: "Slip-resistant, UV-stable, beautiful around the water." },
-  { title: "Sidewalk", desc: "Curb appeal that lasts. Seal and protect every walkway." },
+  { title: "Garage", desc: "The classic — high-gloss, hot-tire-proof, built to impress.", img: "/images/gallery-garage.webp" },
+  { title: "Basement", desc: "Transform cold concrete into a finished living space.", img: "/images/gallery-basement.webp" },
+  { title: "Pool Deck", desc: "Slip-resistant, UV-stable, beautiful around the water.", img: "/images/gallery-pool-deck.webp" },
+  { title: "Sidewalk", desc: "Curb appeal that lasts. Seal and protect every walkway.", img: "/images/gallery-sidewalk.webp" },
 ];
 
 export default function Gallery() {
@@ -24,12 +24,12 @@ export default function Gallery() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {cards.map((c, i) => (
             <div key={i} className="gallery-card group cursor-pointer" data-scale-in>
-              {/* SWAP POINT: replace with real <Image> */}
-              <div className="absolute inset-0 bg-gradient-to-br from-ink2 to-navy flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-                <span className="text-cream/20 text-xs font-medium px-4 text-center">
-                  Replace with install photo
-                </span>
-              </div>
+              <img
+                src={c.img}
+                alt={`${c.title} epoxy floor`}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
               <div className="absolute bottom-0 left-0 right-0 z-10 p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                 <h3 className="text-lg font-bold text-cream">{c.title}</h3>
                 <p className="mt-1 text-sm text-cream/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{c.desc}</p>

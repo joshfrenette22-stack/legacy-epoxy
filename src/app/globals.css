@@ -66,6 +66,15 @@ body {
   transform: scale(1) translateY(0);
 }
 
+/* ── Hero h1 entrance — pure CSS so it can't conflict with GSAP scroll ── */
+@keyframes hero-h1-in {
+  from { opacity: 0; transform: translateY(50px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-h1-enter {
+  animation: hero-h1-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
 /* ── Hero overlay layers — promoted to GPU ── */
 .hero-gradient {
   will-change: transform;
