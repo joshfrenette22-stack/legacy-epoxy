@@ -43,29 +43,31 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="relative bg-ink py-20 md:py-28">
+    <section id="features" className="relative py-24 md:py-32 overflow-hidden"
+      style={{ background: "linear-gradient(180deg, #151c26 0%, #0d1117 50%, #151c26 100%)" }}>
+
       <div className="mx-auto max-w-6xl px-5 md:px-8">
-        <div className="text-center mb-14 md:mb-20">
-          <p className="text-orange text-sm font-semibold tracking-widest uppercase mb-3">
+        <div className="text-center mb-16 md:mb-24" data-reveal>
+          <p className="text-orange text-sm font-semibold tracking-[0.2em] uppercase mb-4">
             Why Legacy Epoxy
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-cream tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-cream tracking-tight leading-tight">
             Built different.{" "}
             <span className="font-serif italic text-cream/80">Built to last.</span>
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8" data-stagger>
           {features.map((f, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-7 md:p-9 transition-colors hover:bg-white/[0.04]"
+              className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 md:p-10 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/[0.1] group"
             >
-              <div className="mb-5 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-orange/10 text-orange">
+              <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-orange/10 text-orange transition-transform duration-300 group-hover:scale-110">
                 {f.icon}
               </div>
-              <h3 className="text-xl font-bold text-cream mb-2">{f.title}</h3>
-              <p className="text-base text-cream/60 leading-relaxed">{f.desc}</p>
+              <h3 className="text-xl font-bold text-cream mb-3">{f.title}</h3>
+              <p className="text-base text-cream/55 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>

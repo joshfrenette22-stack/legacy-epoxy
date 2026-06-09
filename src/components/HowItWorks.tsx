@@ -25,32 +25,43 @@ export default function HowItWorks() {
   return (
     <section
       id="process"
-      className="relative py-20 md:py-28"
+      className="relative py-24 md:py-32 overflow-hidden"
       style={{ background: "var(--color-cream)", color: "var(--color-navy)" }}
     >
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
-        <div className="text-center mb-14 md:mb-20">
-          <p className="text-orange text-sm font-semibold tracking-widest uppercase mb-3">
+      {/* Top transition */}
+      <div className="absolute inset-x-0 top-0 h-32 pointer-events-none"
+        style={{ background: "linear-gradient(to bottom, #151c26, var(--color-cream))" }} />
+
+      <div className="mx-auto max-w-6xl px-5 md:px-8 relative">
+        <div className="text-center mb-16 md:mb-24" data-reveal>
+          <p className="text-orange text-sm font-semibold tracking-[0.2em] uppercase mb-4">
             How It Works
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
             Four steps to a{" "}
             <span className="font-serif italic">finished surface.</span>
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8" data-stagger>
           {steps.map((s, i) => (
             <div key={i} className="text-center md:text-left">
-              <span className="text-5xl md:text-6xl font-bold text-orange/20 leading-none">
+              <span className="text-6xl md:text-7xl font-bold text-orange/15 leading-none block">
                 {s.num}
               </span>
-              <h3 className="mt-3 text-xl font-bold">{s.title}</h3>
-              <p className="mt-2 text-base leading-relaxed opacity-70">{s.desc}</p>
+              <h3 className="mt-4 text-xl font-bold">{s.title}</h3>
+              <p className="mt-2 text-base leading-relaxed opacity-60">{s.desc}</p>
+              {i < steps.length - 1 && (
+                <div className="hidden md:block mt-6 h-px bg-navy/10" data-line />
+              )}
             </div>
           ))}
         </div>
       </div>
+
+      {/* Bottom transition */}
+      <div className="absolute inset-x-0 bottom-0 h-32 pointer-events-none"
+        style={{ background: "linear-gradient(to top, #0d1117, var(--color-cream))" }} />
     </section>
   );
 }
