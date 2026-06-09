@@ -9,17 +9,20 @@ export default function ChemTecSection() {
   const t2Ref = useRef<HTMLDivElement>(null);
   const t3Ref = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
-  const [mobile, setMobile] = useState(false);
+  const mobileRef = useRef(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 768 ||
+    mobileRef.current = window.innerWidth < 768 ||
       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    setMobile(isMobile);
+    setMounted(true);
   }, []);
 
-  // Wait for video — mobile fallback
+  // Video readiness
   useEffect(() => {
-    if (mobile) {
+    if (!mounted) return;
+
+    if (mobileRef.current) {
       setReady(true);
       return;
     }
@@ -45,9 +48,9 @@ export default function ChemTecSection() {
       video.removeEventListener("loadeddata", markReady);
       clearTimeout(timeout);
     };
-  }, [mobile]);
+  }, [mounted]);
 
-  // GSAP scroll-scrub with 3 text phases
+  // GSAP scroll-scrub with alternating left/right text
   useEffect(() => {
     if (!ready) return;
     const el = pinRef.current;
@@ -56,9 +59,10 @@ export default function ChemTecSection() {
     const t3 = t3Ref.current;
     if (!el || !t1 || !t2 || !t3) return;
 
+    const isMobile = mobileRef.current;
     const video = videoRef.current;
-    const canSeek = !mobile && video && video.readyState >= 2;
-    const dur = canSeek ? (video!.duration || 10) : 10;
+    const canSeek = !isMobile && video && video.readyState >= 2;
+    const dur = canSeek ? (video!.duration || 6) : 6;
 
     let cleanup: (() => void) | undefined;
 
@@ -72,7 +76,7 @@ export default function ChemTecSection() {
           scrollTrigger: {
             trigger: el,
             start: "top top",
-            end: mobile ? "+=350%" : "+=500%",
+            end: isMobile ? "+=350%" : "+=500%",
             pin: true,
             scrub: 0.5,
             anticipatePin: 1,
@@ -94,33 +98,35 @@ export default function ChemTecSection() {
           }, 0);
         }
 
-        // ── Text 1: "The Science Behind the Surface" (0.0 → 0.3) ──
+        // ── Text 1: LEFT side — "The science behind the surface" ──
         tl.fromTo(t1,
-          { opacity: 0, y: 60 },
-          { opacity: 1, y: 0, duration: 0.08, ease: "power3.out" }, 0.02);
+          { opacity: 0, x: -80 },
+          { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.03);
         tl.to(t1,
-          { opacity: 0, y: -40, duration: 0.08, ease: "power2.in" }, 0.25);
+          { opacity: 0, x: -60, duration: 0.08, ease: "power2.in" }, 0.28);
 
-        // ── Text 2: "Engineered for Extremes" (0.3 → 0.65) ──
+        // ── Text 2: RIGHT side — "Engineered for extremes" ──
         tl.fromTo(t2,
-          { opacity: 0, y: 60 },
-          { opacity: 1, y: 0, duration: 0.08, ease: "power3.out" }, 0.33);
+          { opacity: 0, x: 80 },
+          { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.36);
         tl.to(t2,
-          { opacity: 0, y: -40, duration: 0.08, ease: "power2.in" }, 0.58);
+          { opacity: 0, x: 60, duration: 0.08, ease: "power2.in" }, 0.61);
 
-        // ── Text 3: "Built to Last a Lifetime" (0.65 → 1.0) ──
+        // ── Text 3: LEFT side — "Built to last a lifetime" ──
         tl.fromTo(t3,
-          { opacity: 0, y: 60 },
-          { opacity: 1, y: 0, duration: 0.08, ease: "power3.out" }, 0.66);
+          { opacity: 0, x: -80 },
+          { opacity: 1, x: 0, duration: 0.1, ease: "power3.out" }, 0.68);
         tl.to(t3,
-          { opacity: 0, y: -40, duration: 0.06, ease: "power2.in" }, 0.92);
+          { opacity: 0, x: -60, duration: 0.06, ease: "power2.in" }, 0.92);
       });
 
       cleanup = () => ctx.revert();
     })();
 
     return () => cleanup?.();
-  }, [ready, mobile]);
+  }, [ready]);
+
+  const isMobile = mobileRef.current;
 
   return (
     <section
@@ -128,8 +134,8 @@ export default function ChemTecSection() {
       className="relative overflow-hidden"
       style={{ height: "100dvh", background: "#faf7f1" }}
     >
-      {/* Video / Mobile poster */}
-      {mobile ? (
+      {/* Video — bucket animation is the star, stays centered */}
+      {mounted && isMobile ? (
         <div className="absolute inset-0 z-[1] bg-paper" />
       ) : (
         <video
@@ -142,7 +148,7 @@ export default function ChemTecSection() {
         />
       )}
 
-      {/* Immersive white/cream gradient edges — blends video into page */}
+      {/* Immersive cream gradient edges */}
       <div className="chemtec-gradient absolute inset-x-0 top-0 h-48 z-[3]"
         style={{ background: "linear-gradient(to bottom, #faf7f1, transparent)" }} />
       <div className="chemtec-gradient absolute inset-x-0 bottom-0 h-48 z-[3]"
@@ -152,71 +158,71 @@ export default function ChemTecSection() {
       <div className="chemtec-gradient absolute inset-y-0 right-0 w-[20%] z-[2]"
         style={{ background: "linear-gradient(to left, #faf7f1, transparent)" }} />
       <div className="chemtec-gradient absolute inset-0 z-[2]"
-        style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(250,247,241,0.5) 100%)" }} />
+        style={{ background: "radial-gradient(ellipse 60% 55% at 50% 50%, transparent 30%, rgba(250,247,241,0.55) 100%)" }} />
 
-      {/* ── Text Phase 1 ── */}
+      {/* ── Text 1: LEFT side ── */}
       <div
         ref={t1Ref}
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0"
-        style={{ willChange: "opacity, transform" }}
+        className="absolute inset-y-0 z-10 flex flex-col justify-center pointer-events-none opacity-0 left-0 px-6 md:px-12 lg:px-20"
+        style={{ willChange: "opacity, transform", width: isMobile ? "100%" : "45%" }}
       >
-        <div className="max-w-3xl mx-auto">
-          <p className="text-orange text-xs md:text-sm font-semibold tracking-[0.25em] uppercase mb-5">
+        <div className="pointer-events-auto">
+          <p className="text-orange text-xs md:text-sm font-semibold tracking-[0.25em] uppercase mb-4">
             ChemTec Certified
           </p>
-          <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-ink tracking-tight leading-[1.08] drop-shadow-[0_1px_20px_rgba(250,247,241,0.4)]">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-ink tracking-tight leading-[1.08]">
             The science behind{" "}
             <span className="font-serif italic">the surface.</span>
           </h2>
-          <p className="mt-6 text-base md:text-lg text-ink/50 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-5 text-sm md:text-base lg:text-lg text-ink/50 max-w-md leading-relaxed">
             We&apos;re Northern Colorado&apos;s only certified ChemTec installer.
-            That means access to industrial-grade resin systems most contractors can&apos;t even order.
+            Industrial-grade resin systems most contractors can&apos;t even order.
           </p>
         </div>
       </div>
 
-      {/* ── Text Phase 2 ── */}
+      {/* ── Text 2: RIGHT side ── */}
       <div
         ref={t2Ref}
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0"
-        style={{ willChange: "opacity, transform" }}
+        className="absolute inset-y-0 z-10 flex flex-col justify-center pointer-events-none opacity-0 right-0 px-6 md:px-12 lg:px-20 text-right"
+        style={{ willChange: "opacity, transform", width: isMobile ? "100%" : "45%" }}
       >
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-ink tracking-tight leading-[1.08] drop-shadow-[0_1px_20px_rgba(250,247,241,0.4)]">
+        <div className="pointer-events-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-ink tracking-tight leading-[1.08]">
             Engineered for{" "}
             <span className="font-serif italic">extremes.</span>
           </h2>
-          <p className="mt-6 text-base md:text-lg text-ink/50 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-5 text-sm md:text-base lg:text-lg text-ink/50 max-w-md ml-auto leading-relaxed">
             Hot tires. Road salt. Gasoline. Brake fluid.
-            ChemTec&apos;s multi-layer polyaspartic system doesn&apos;t just resist damage —
-            it was formulated to shrug it off entirely.
+            ChemTec&apos;s polyaspartic system doesn&apos;t just resist damage —
+            it shrugs it off entirely.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
             <span className="chemtec-chip">400°F Hot-Tire Rated</span>
-            <span className="chemtec-chip">UV Stable — No Yellowing</span>
+            <span className="chemtec-chip">UV Stable</span>
             <span className="chemtec-chip">Chemical Impervious</span>
           </div>
         </div>
       </div>
 
-      {/* ── Text Phase 3 ── */}
+      {/* ── Text 3: LEFT side ── */}
       <div
         ref={t3Ref}
-        className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0"
-        style={{ willChange: "opacity, transform" }}
+        className="absolute inset-y-0 z-10 flex flex-col justify-center pointer-events-none opacity-0 left-0 px-6 md:px-12 lg:px-20"
+        style={{ willChange: "opacity, transform", width: isMobile ? "100%" : "45%" }}
       >
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-ink tracking-tight leading-[1.08] drop-shadow-[0_1px_20px_rgba(250,247,241,0.4)]">
+        <div className="pointer-events-auto">
+          <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-ink tracking-tight leading-[1.08]">
             Built to last{" "}
             <span className="font-serif italic">a lifetime.</span>
           </h2>
-          <p className="mt-6 text-base md:text-lg text-ink/50 max-w-xl mx-auto leading-relaxed">
+          <p className="mt-5 text-sm md:text-base lg:text-lg text-ink/50 max-w-md leading-relaxed">
             Every install comes with a 10-year warranty backed by ChemTec.
             This isn&apos;t a weekend paint job — it&apos;s a professional surface
-            that outlasts the house it&apos;s built into.
+            that outlasts the house.
           </p>
-          <div className="mt-8 pointer-events-auto">
-            <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">
+          <div className="mt-6">
+            <a href="#quote" className="btn-pill btn-pill-primary text-sm md:text-base">
               Get a Free Quote
             </a>
           </div>

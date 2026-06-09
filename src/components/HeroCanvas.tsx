@@ -121,19 +121,20 @@ export default function HeroCanvas() {
           scrollTrigger: {
             trigger: el,
             start: "top top",
-            end: isMobile ? "+=350%" : "+=450%",
+            end: isMobile ? "+=400%" : "+=500%",
             pin: true,
             scrub: 0.5,
             anticipatePin: 1,
           },
         });
 
-        // ── Phase 1: Video seek (desktop only, 0 → 0.4) ──
+        // ── Video seek runs across phases 1+2 (0 → 0.55) ──
+        // Gives the full floor reveal time to complete
         if (canSeek) {
           const o = { t: 0 };
           tl.to(o, {
             t: dur,
-            duration: 0.4,
+            duration: 0.55,
             ease: "none",
             onUpdate() {
               if (Math.abs(video!.currentTime - o.t) > 0.03) {
@@ -143,42 +144,38 @@ export default function HeroCanvas() {
           }, 0);
         }
 
-        // Headline 1: fade out
+        // ── Phase 1: Headline 1 out (0.05 → 0.15) ──
         tl.to(h1,
-          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.07);
+          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.05);
 
-        // Headline 2: fade in
+        // ── Phase 2: Headline 2 in/out over floor reveal (0.18 → 0.45) ──
         tl.fromTo(h2,
           { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.22);
-
-        // ── Phase 2: Headline 2 out → callouts in (0.4 → 0.75) ──
+          { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.18);
         tl.to(h2,
           { opacity: 0, y: -30, duration: 0.06, ease: "power2.in" }, 0.42);
 
-        // Callout overlay
+        // ── Phase 3: Callouts over completed floor (0.50 → 0.78) ──
         tl.fromTo(h3,
           { opacity: 0 },
-          { opacity: 1, duration: 0.04 }, 0.48);
+          { opacity: 1, duration: 0.04 }, 0.50);
 
-        // Stagger callouts
         callouts.forEach((callout, i) => {
-          const delay = 0.50 + i * 0.028;
+          const delay = 0.52 + i * 0.025;
           tl.fromTo(callout,
             { opacity: 0, scale: 0, rotateX: -20 },
-            { opacity: 1, scale: 1, rotateX: 0, duration: 0.06, ease: "back.out(1.7)" },
+            { opacity: 1, scale: 1, rotateX: 0, duration: 0.05, ease: "back.out(1.7)" },
             delay
           );
         });
 
-        // ── Phase 3: Fade callouts + dark-to-light transition (0.75 → 1.0) ──
+        // ── Phase 4: Callouts out + dark→light transition (0.80 → 1.0) ──
         tl.to(h3,
-          { opacity: 0, duration: 0.08, ease: "power2.in" }, 0.78);
+          { opacity: 0, duration: 0.06, ease: "power2.in" }, 0.80);
 
-        // White/cream fade overlay — dark → light transition
         tl.fromTo(fade,
           { opacity: 0 },
-          { opacity: 1, duration: 0.18, ease: "power2.inOut" }, 0.82);
+          { opacity: 1, duration: 0.16, ease: "power2.inOut" }, 0.84);
       });
 
       cleanup = () => ctx.revert();
