@@ -4,11 +4,24 @@ import { useEffect, useRef, useState } from "react";
 
 const PHONE = "9705551234"; // TODO: replace with real number
 
+const PILLS = [
+  "Diamond Blade Prepped",
+  "Hot-Tire Proof",
+  "Chemical Resistant",
+  "Mirror-Gloss Finish",
+  "UV Stable",
+  "10-Year Warranty",
+  "Slip-Resistant",
+  "Single-Day Install",
+];
+
 export default function HeroCanvas() {
   const pinRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const h1Ref = useRef<HTMLDivElement>(null);
   const h2Ref = useRef<HTMLDivElement>(null);
+  const h3Ref = useRef<HTMLDivElement>(null);
+  const pillRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [reduced, setReduced] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
 
@@ -49,7 +62,6 @@ export default function HeroCanvas() {
     const h1 = h1Ref.current;
     if (!h1) return;
 
-    let cleanup: (() => void) | undefined;
     const timer = setTimeout(async () => {
       const gsap = (await import("gsap")).default;
       gsap.fromTo(h1,
@@ -58,20 +70,19 @@ export default function HeroCanvas() {
       );
     }, 300);
 
-    return () => {
-      clearTimeout(timer);
-      cleanup?.();
-    };
+    return () => clearTimeout(timer);
   }, [reduced, videoReady]);
 
-  // GSAP scroll-scrub: seek video + animate headlines
+  // GSAP scroll-scrub: seek video + animate headlines + feature pills
   useEffect(() => {
     if (reduced || !videoReady) return;
     const el = pinRef.current;
     const video = videoRef.current;
     const h1 = h1Ref.current;
     const h2 = h2Ref.current;
-    if (!el || !video || !h1 || !h2) return;
+    const h3 = h3Ref.current;
+    const pills = pillRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (!el || !video || !h1 || !h2 || !h3 || pills.length === 0) return;
 
     let cleanup: (() => void) | undefined;
 
@@ -89,19 +100,19 @@ export default function HeroCanvas() {
           scrollTrigger: {
             trigger: el,
             start: "top top",
-            end: "+=250%",
+            end: "+=350%",
             pin: true,
             scrub: 0.5,
             anticipatePin: 1,
           },
         });
 
-        // Video seek — scrub currentTime from 0 to duration
+        // ── Phase 1: Video seek (0 → 0.55 of timeline) ──
         tl.to(o, {
           t: duration,
+          duration: 0.55,
           ease: "none",
           onUpdate() {
-            // Only seek if video is ready and time actually changed
             const target = o.t;
             if (Math.abs(video.currentTime - target) > 0.03) {
               video.currentTime = target;
@@ -109,14 +120,33 @@ export default function HeroCanvas() {
           },
         }, 0);
 
-        // Headline 1: already visible from load animation, fade out on scroll
+        // Headline 1: fade out as scroll starts
         tl.to(h1,
-          { opacity: 0, y: -30, duration: 0.15, ease: "power2.in" }, 0.15);
+          { opacity: 0, y: -30, duration: 0.1, ease: "power2.in" }, 0.08);
 
-        // Headline 2: fade in
+        // Headline 2: fade in mid-video
         tl.fromTo(h2,
           { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" }, 0.5);
+          { opacity: 1, y: 0, duration: 0.1, ease: "power2.out" }, 0.3);
+
+        // ── Phase 2: Headline 2 out → Feature pills in (0.55 → 1.0) ──
+        tl.to(h2,
+          { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.58);
+
+        // Feature pills container fade in
+        tl.fromTo(h3,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.05 }, 0.64);
+
+        // Stagger each pill in
+        pills.forEach((pill, i) => {
+          const staggerDelay = 0.66 + i * 0.025;
+          tl.fromTo(pill,
+            { opacity: 0, y: 25, scale: 0.9 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.06, ease: "power2.out" },
+            staggerDelay
+          );
+        });
       });
 
       cleanup = () => ctx.revert();
@@ -138,6 +168,11 @@ export default function HeroCanvas() {
           <h1 className="text-4xl md:text-6xl font-bold text-cream tracking-tight leading-[1.1]">
             A garage floor <span className="font-serif italic">built to outlast</span> the house.
           </h1>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {PILLS.map((p) => (
+              <span key={p} className="feature-pill">{p}</span>
+            ))}
+          </div>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#quote" className="btn-pill btn-pill-primary text-lg">Get a Free Quote</a>
             <a href={`tel:${PHONE}`} className="btn-pill btn-pill-ghost">Call Now</a>
@@ -196,13 +231,34 @@ export default function HeroCanvas() {
         </div>
       </div>
 
-      {/* Headline 2 — fades in mid-scroll */}
+      {/* Headline 2 — fades in mid-scroll, out before pills */}
       <div ref={h2Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity, transform" }}>
         <div className="pointer-events-auto">
           <h2 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
             Not a coating. <span className="font-serif italic">A finished surface.</span>
           </h2>
-          <div className="mt-8">
+        </div>
+      </div>
+
+      {/* Phase 3: Feature pills — stagger in over the video */}
+      <div ref={h3Ref} className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-5 pointer-events-none opacity-0" style={{ willChange: "opacity" }}>
+        <div className="pointer-events-auto max-w-3xl mx-auto">
+          <p className="text-orange text-sm font-semibold tracking-[0.2em] uppercase mb-8 drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]">
+            What Sets Us Apart
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+            {PILLS.map((label, i) => (
+              <div
+                key={label}
+                ref={(el) => { pillRefs.current[i] = el; }}
+                className="feature-pill opacity-0"
+                style={{ willChange: "opacity, transform" }}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+          <div className="mt-10">
             <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
           </div>
         </div>

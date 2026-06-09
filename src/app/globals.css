@@ -138,6 +138,23 @@ body {
   letter-spacing: 0.02em;
 }
 
+/* ── Feature pills (hero scroll phase 3) ── */
+.feature-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-cream);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
 /* ── Form inputs ── */
 .form-input {
   width: 100%;
