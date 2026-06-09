@@ -142,8 +142,8 @@ export default function HeroCanvas() {
         }
 
         // ── PHASE 1: Headline 1 (already visible from entrance anim) ──
-        // Holds, then fades out
-        tl.to(h1, { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.10);
+        // Holds, then fades out — use fromTo so scroll timeline owns the state
+        tl.fromTo(h1, { opacity: 1, y: 0 }, { opacity: 0, y: -30, duration: 0.08, ease: "power2.in" }, 0.10);
 
         // ── PHASE 2: Headline 2 ──
         tl.fromTo(h2, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08, ease: "power2.out" }, 0.22);
