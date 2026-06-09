@@ -186,11 +186,11 @@ export default function ChemTecSection() {
         </div>
       </div>
 
-      {/* Text 2 — desktop: right-aligned card | mobile: centered card */}
+      {/* Text 2 — desktop: right-aligned bottom | mobile: centered top */}
       <div
         ref={t2Ref}
-        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:right-0 px-5 md:px-12 lg:px-16 flex items-end md:items-end justify-center md:justify-end w-full md:w-[44%]"
-        style={{ willChange: "opacity, transform", bottom: "10%" }}
+        className="absolute z-[5] pointer-events-none opacity-0 inset-x-0 md:inset-x-auto md:right-0 px-5 md:px-12 lg:px-16 flex items-start md:items-end justify-center md:justify-end w-full md:w-[44%] top-[8%] md:top-auto md:bottom-[10%]"
+        style={{ willChange: "opacity, transform" }}
       >
         <div className="chemtec-card pointer-events-auto max-w-sm md:max-w-none text-center md:text-right">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
@@ -213,7 +213,7 @@ export default function ChemTecSection() {
       {mounted && mobileRef.current ? (
         <div
           className="absolute z-[5] pointer-events-none inset-x-0 px-5"
-          style={{ top: "55%" }}
+          style={{ top: "62%" }}
         >
           <div className="flex flex-col gap-2 max-w-sm mx-auto">
             {REVIEWS.map((r, i) => (
