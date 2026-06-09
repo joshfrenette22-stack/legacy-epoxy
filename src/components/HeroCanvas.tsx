@@ -1,18 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 const TOTAL = 84;
 const frameSrc = (i: number) => `/frames/frame_${String(i).padStart(3, "0")}.jpg`;
 const PHONE = "9705551234"; // TODO: replace with real number
 
+/**
+ * Draw an image onto a canvas with "object-fit: cover" behavior.
+ * Safari doesn't support object-fit on <canvas>, so we calculate it manually.
+ */
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  cw: number,
+  ch: number
+) {
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+  if (!iw || !ih) return;
+  const scale = Math.max(cw / iw, ch / ih);
+  const sw = iw * scale;
+  const sh = ih * scale;
+  const sx = (cw - sw) / 2;
+  const sy = (ch - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh);
+}
+
 export default function HeroCanvas() {
   const pinRef = useRef<HTMLDivElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const h1Ref = useRef<HTMLDivElement>(null);
   const h2Ref = useRef<HTMLDivElement>(null);
   const cur = useRef(0);
-  const srcs = useRef<string[]>([]);
+  const images = useRef<HTMLImageElement[]>([]);
   const [ready, setReady] = useState(false);
   const [reduced, setReduced] = useState(false);
 
@@ -25,21 +46,20 @@ export default function HeroCanvas() {
     return () => mq.removeEventListener("change", fn);
   }, []);
 
-  // Preload + decode all frames
+  // Preload + decode all frames into Image objects (kept in memory)
   useEffect(() => {
     if (reduced) return;
     let count = 0;
-    const paths: string[] = [];
+    const imgs: HTMLImageElement[] = new Array(TOTAL);
 
-    for (let i = 1; i <= TOTAL; i++) {
-      const path = frameSrc(i);
-      paths.push(path);
+    for (let i = 0; i < TOTAL; i++) {
       const img = new Image();
-      img.src = path;
+      img.src = frameSrc(i + 1);
+      imgs[i] = img;
       const done = () => {
         count++;
         if (count >= TOTAL) {
-          srcs.current = paths;
+          images.current = imgs;
           setReady(true);
         }
       };
@@ -47,11 +67,37 @@ export default function HeroCanvas() {
     }
   }, [reduced]);
 
-  // Set initial frame once ready
+  // Size canvas to container and draw a frame
+  const paintFrame = useCallback((idx: number) => {
+    const canvas = canvasRef.current;
+    const img = images.current[idx];
+    if (!canvas || !img) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const cw = rect.width;
+    const ch = rect.height;
+
+    // Size canvas buffer to 1x CSS pixels (not retina) for performance
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cw, ch);
+    drawCover(ctx, img, cw, ch);
+  }, []);
+
+  // Paint first frame + handle resize once ready
   useEffect(() => {
-    if (!ready || !imgRef.current) return;
-    imgRef.current.src = srcs.current[0];
-  }, [ready]);
+    if (!ready) return;
+    paintFrame(0);
+
+    const onResize = () => paintFrame(cur.current);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [ready, paintFrame]);
 
   // GSAP scroll — dynamic import avoids SSR
   useEffect(() => {
@@ -59,8 +105,7 @@ export default function HeroCanvas() {
     const el = pinRef.current;
     const h1 = h1Ref.current;
     const h2 = h2Ref.current;
-    const img = imgRef.current;
-    if (!el || !h1 || !h2 || !img) return;
+    if (!el || !h1 || !h2) return;
 
     let cleanup: (() => void) | undefined;
 
@@ -83,15 +128,15 @@ export default function HeroCanvas() {
           },
         });
 
-        // Frame scrub — just swap img src, browser serves from decode cache
+        // Frame scrub — drawImage from pre-decoded Image objects (pure GPU blit)
         tl.to(o, {
           f: TOTAL - 1,
           ease: "none",
           onUpdate() {
             const idx = Math.round(o.f);
             if (idx !== cur.current) {
-              img.src = srcs.current[idx];
               cur.current = idx;
+              paintFrame(idx);
             }
           },
         }, 0);
@@ -113,9 +158,9 @@ export default function HeroCanvas() {
     })();
 
     return () => cleanup?.();
-  }, [reduced, ready]);
+  }, [reduced, ready, paintFrame]);
 
-  // ── Reduced motion fallback ──
+  // Reduced motion fallback
   if (reduced) {
     return (
       <section className="relative min-h-[90vh] flex items-center justify-center pt-20 overflow-hidden"
@@ -146,13 +191,11 @@ export default function HeroCanvas() {
       className="relative h-screen overflow-hidden"
       style={{ background: "#0d1117" }}
     >
-      {/* Hero image — src swapped on scroll, object-fit:cover handles sizing */}
-      <img
-        ref={imgRef}
-        src="/images/hero-poster.jpg"
-        alt="Epoxy floor installation"
-        className="absolute inset-0 w-full h-full object-cover z-[1]"
-        draggable={false}
+      {/* Canvas — drawImage from pre-decoded frames, no src swapping */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full z-[1]"
+        style={{ display: "block" }}
       />
 
       {/* Immersive gradient overlays — GPU composited layers */}
