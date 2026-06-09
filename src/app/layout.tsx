@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   title: "Legacy Epoxy | Premium Epoxy Floors — Northern Colorado",
   description:
     "Northern Colorado's only certified ChemTec installer. Mirror-gloss epoxy floors for garages, basements, pool decks & sidewalks. 10-year warranty. Get a free quote.",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
   openGraph: {
     title: "Legacy Epoxy | Premium Epoxy Floors",
     description:
