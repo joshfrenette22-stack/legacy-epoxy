@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const PHONE = "9705551234"; // TODO: replace with real number
-
 const CALLOUTS = [
   "Diamond Blade Prepped",
   "Hot-Tire Proof",
@@ -183,14 +181,14 @@ export default function HeroCanvas() {
         <div className="pointer-events-auto">
           <div className="warranty-chip mb-6">
             <span className="w-2 h-2 rounded-full bg-orange inline-block" />
-            1 of 1 — Only certified ChemTec installer · 10-year warranty
+            Only certified ChemTec Installer &bull; 10-year warranty
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-cream tracking-tight leading-[1.08] max-w-4xl mx-auto drop-shadow-[0_2px_30px_rgba(0,0,0,0.5)]">
             A garage floor <span className="font-serif italic text-orange">built to outlast</span> the house.
           </h1>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="#quote" className="btn-pill btn-pill-primary text-base md:text-lg">Get a Free Quote</a>
-            <a href={`tel:${PHONE}`} className="btn-pill btn-pill-ghost text-base">Call Now</a>
+            <a href="#features" className="btn-pill btn-pill-ghost text-base">Why Legacy Epoxy</a>
           </div>
         </div>
       </div>

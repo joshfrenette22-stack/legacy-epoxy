@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 
-const PHONE = "9705551234"; // TODO: replace with real number
-const PHONE_DISPLAY = "(970) 555-1234";
+const PHONES = {
+  CO: { raw: "9704055043", display: "970-405-5043" },
+  NM: { raw: "5056155262", display: "505-615-5262" },
+};
 
 const links = [
   { label: "Why Us", href: "#features" },
@@ -54,13 +56,16 @@ export default function Nav() {
         </div>
 
         {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center gap-3">
-          <a
-            href={`tel:${PHONE}`}
-            className="text-sm font-medium text-cream/70 hover:text-cream transition-colors"
-          >
-            {PHONE_DISPLAY}
-          </a>
+        <div className="hidden md:flex items-center gap-4">
+          <div className="flex items-center gap-3 text-sm font-medium">
+            <a href={`tel:${PHONES.CO.raw}`} className="text-cream/70 hover:text-cream transition-colors">
+              <span className="text-cream/40 mr-1">CO</span>{PHONES.CO.display}
+            </a>
+            <span className="text-cream/20">|</span>
+            <a href={`tel:${PHONES.NM.raw}`} className="text-cream/70 hover:text-cream transition-colors">
+              <span className="text-cream/40 mr-1">NM</span>{PHONES.NM.display}
+            </a>
+          </div>
           <a href="#quote" className="btn-pill btn-pill-primary text-sm !py-2.5 !px-5">
             Get a Free Quote
           </a>
@@ -97,8 +102,11 @@ export default function Nav() {
             </a>
           ))}
           <div className="mt-4 flex flex-col gap-3">
-            <a href={`tel:${PHONE}`} className="btn-pill btn-pill-ghost text-sm">
-              Call {PHONE_DISPLAY}
+            <a href={`tel:${PHONES.CO.raw}`} className="btn-pill btn-pill-ghost text-sm">
+              Call Colorado {PHONES.CO.display}
+            </a>
+            <a href={`tel:${PHONES.NM.raw}`} className="btn-pill btn-pill-ghost text-sm">
+              Call New Mexico {PHONES.NM.display}
             </a>
             <a
               href="#quote"

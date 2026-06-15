@@ -53,7 +53,7 @@ export default function QuoteForm() {
         </div>
         <h3 className="text-2xl font-bold text-ink mb-2">Quote request sent!</h3>
         <p className="text-ink/60 text-lg">
-          We&apos;ll call you within one business day.
+          We&apos;ll be in touch soon.
         </p>
       </div>
     );
@@ -147,14 +147,14 @@ export default function QuoteForm() {
 
       <div>
         <label htmlFor="message" className="block text-sm font-medium text-ink/70 mb-1.5">
-          Message <span className="text-ink/30">(optional)</span>
+          Tell Us About Your Project <span className="text-ink/30">(optional)</span>
         </label>
         <textarea
           id="message"
           name="message"
           rows={3}
           className="form-input-light resize-none"
-          placeholder="Anything else we should know?"
+          placeholder="Garage size, surface condition, timeline, etc."
         />
       </div>
 
@@ -173,7 +173,7 @@ export default function QuoteForm() {
       </button>
 
       <p className="text-center text-sm text-ink/40">
-        No obligation. We&apos;ll call within one business day.
+        No obligation — free estimate, no strings attached.
       </p>
     </form>
   );

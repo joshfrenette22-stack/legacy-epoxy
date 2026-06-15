@@ -180,7 +180,7 @@ export default function ChemTecSection() {
             <span className="font-serif italic text-orange">the surface.</span>
           </h2>
           <p className="mt-4 text-sm md:text-base text-ink/60 max-w-md leading-relaxed">
-            We&apos;re Northern Colorado&apos;s only certified ChemTec installer.
+            We&apos;re the only certified ChemTec Installer in both Colorado and New Mexico.
             Industrial-grade resin systems most contractors can&apos;t even order.
           </p>
         </div>
