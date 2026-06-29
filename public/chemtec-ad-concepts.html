@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legacy Epoxy Supply — Ad Review (Updated)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --orange: #E8631A;
+    --orange-d: #c64f0e;
+    --ink: #0d1117;
+    --ink2: #151c26;
+    --cream: #faf7f1;
+    --paper: #f6f2ea;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--ink);
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+    padding: 60px 40px 100px;
+    margin: 0;
+  }
+
+  .page-header { text-align: center; margin-bottom: 70px; }
+  .page-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .page-subtitle { font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.45); }
+
+  /* ── Project sections ── */
+  .project-section { margin-bottom: 80px; }
+  .project-section:not(:last-of-type) { padding-bottom: 80px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .project-header { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .project-label { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .project-tag {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 4px;
+    background: rgba(232,99,26,0.15); color: var(--orange); border: 1px solid rgba(232,99,26,0.25);
+  }
+  .project-description { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 32px; max-width: 700px; line-height: 1.5; }
+
+  .btn-replay {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-left: auto;
+  }
+  .btn-replay:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+  .ratio-row { display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap; }
+  .ratio-col { display: flex; flex-direction: column; align-items: center; }
+
+  .mock-frame {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    background: #000000;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ratio-label {
+    margin-top: 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+  }
+
+  /* Safe-zone overlays for 9:16 (hidden) */
+  .safe-zone-top, .safe-zone-bottom {
+    display: none;
+  }
+
+  /* Animated background layer */
+  .mock-bg-video {
+    position: absolute; inset: 0; z-index: 0; overflow: hidden;
+  }
+  .mock-bg-video video {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .mock-bg-video::after {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+  }
+  .mock-bg-video-full::after {
+    background: rgba(0,0,0,0.15);
+  }
+  .mock-scrim-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 50%; z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Shared ad internals */
+  .mock-inner {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8%; position: relative; z-index: 1;
+  }
+
+  .mock-headline { font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; text-align: center; }
+  .mock-subhead { font-weight: 400; color: rgba(255,255,255,0.6); text-align: center; }
+  .mock-hr { border: none; border-top: 1px solid rgba(255,255,255,0.2); }
+  .mock-cta {
+    display: inline-block; background: var(--orange); color: #fff; font-weight: 700;
+    border-radius: 4px; text-align: center; text-decoration: none; letter-spacing: 0.01em;
+  }
+  .mock-phone { font-weight: 500; color: rgba(255,255,255,0.45); text-align: center; }
+
+  /* Concept B stagger animations */
+  .anim-fade-up, .anim-slide-up {
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .anim-fade-up.active, .anim-slide-up.active {
+    opacity: 1; transform: translateY(0);
+  }
+  @keyframes cta-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(232,99,26,0.5); }
+    50% { box-shadow: 0 0 18px 4px rgba(232,99,26,0.3); }
+  }
+  .anim-cta-pulse.active {
+    animation: cta-pulse 2s ease-in-out 1.5s infinite;
+  }
+
+  /* ── Static ad (Google Ads) ── */
+  .static-ad-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-size: cover; background-position: center;
+  }
+  .static-ad-overlay {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.15) 100%);
+  }
+  .static-ad-inner {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding: 8%;
+  }
+  .static-ad-inner .ad-logo {
+    position: absolute; top: 8%; left: 50%; transform: translateX(-50%);
+    opacity: 0.9;
+  }
+  .static-ad-surface {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--orange); margin-bottom: 8px;
+  }
+  .static-ad-headline {
+    font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; text-align: center;
+    margin-bottom: 6px; text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+  }
+  .static-ad-sub {
+    font-size: 10px; font-weight: 400; color: rgba(255,255,255,0.6); text-align: center;
+    margin-bottom: 14px; text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+  }
+  .static-ad-cta {
+    display: inline-block; background: var(--orange); color: #fff; font-weight: 700;
+    border-radius: 4px; text-align: center; text-decoration: none; letter-spacing: 0.01em;
+  }
+  .static-ad-url {
+    font-size: 7px; font-weight: 500; color: rgba(255,255,255,0.35); margin-top: 6px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── Ad group label ── */
+  .ad-group-label {
+    font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.6);
+    margin-bottom: 20px; margin-top: 10px;
+  }
+
+  /* ── Archived section ── */
+  .archived-section {
+    margin-top: 80px; padding-top: 40px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .archived-toggle {
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.35); font-family: inherit; font-size: 12px;
+    font-weight: 600; padding: 8px 20px; border-radius: 6px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .archived-toggle:hover { color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.2); }
+  .archived-content { display: none; margin-top: 30px; }
+  .archived-content.open { display: block; }
+
+  /* ── Concept C slider (archived) ── */
+  .slide-frame { position: relative; }
+  .slide {
+    position: absolute; inset: 0; opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .slide.slide-active { opacity: 1; z-index: 1; }
+  .slide-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    transform: scale(1.05);
+    transition: transform 8s ease-out;
+  }
+  .slide-active .slide-bg { transform: scale(1.15); }
+  .slide-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.15) 100%);
+  }
+  .slide-content {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    padding: 10% 8% 9%;
+  }
+  .slide-surface-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--orange); margin-bottom: 8px;
+  }
+  .slide-headline {
+    font-weight: 800; line-height: 1.12; letter-spacing: -0.02em;
+    text-align: center; margin-bottom: 6px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+  }
+  .slide-desc {
+    font-size: 9px; color: rgba(255,255,255,0.55); text-align: center; margin-bottom: 10px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+  }
+  .slide-cta {
+    display: inline-block; background: var(--orange); color: #fff;
+    font-weight: 700; border-radius: 4px; text-align: center; text-decoration: none;
+  }
+  .slide-dots { display: flex; gap: 5px; justify-content: center; }
+  .slide-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+  }
+  .slide-dot.dot-active { background: var(--orange); }
+
+  /* ── Isolate overlay ── */
+  .isolate-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #000; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+  }
+  .isolate-overlay.active { display: flex; }
+  .isolate-close {
+    position: absolute; top: 20px; right: 20px;
+    background: rgba(255,255,255,0.1); border: none; color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 8px 18px; border-radius: 6px; cursor: pointer;
+    z-index: 10;
+  }
+  .isolate-hint {
+    margin-top: 16px; font-size: 11px; color: rgba(255,255,255,0.3);
+  }
+
+  .btn-isolate {
+    position: absolute; bottom: 8px; right: 8px; z-index: 20;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.6);
+    font-family: inherit; font-size: 10px; font-weight: 600;
+    padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .mock-frame:hover .btn-isolate { opacity: 1; }
+
+  .btn-download {
+    position: absolute; bottom: 8px; left: 8px; z-index: 20;
+    background: rgba(232,99,26,0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2); color: #fff;
+    font-family: inherit; font-size: 10px; font-weight: 600;
+    padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    opacity: 0; transition: opacity 0.2s;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .mock-frame:hover .btn-download { opacity: 1; }
+  .btn-download:hover { background: rgba(232,99,26,1); }
+  .btn-download.downloading {
+    opacity: 1; pointer-events: none;
+    background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5);
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<header class="page-header">
+  <h1 class="page-title">Legacy Epoxy Supply — Ad Review</h1>
+  <p class="page-subtitle">Updated deliverables &mdash; June 2026</p>
+</header>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PROJECT 1: SOCIAL MEDIA ADS REFRESH — Concept B with updated headline
+     Motion ad &bull; ChemTec is Back In Town
+     Sizes: 1:1 (1080x1080), 9:16 (1080x1920), 1.91:1 (1200x628)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="project-section" data-concept="b">
+  <div class="project-header">
+    <h2 class="project-label">Social Media Ads Refresh</h2>
+    <span class="project-tag">Motion</span>
+    <button class="btn-replay" onclick="replayConceptB()">Replay</button>
+  </div>
+  <p class="project-description">Concept B: Product Forward &mdash; Full-bleed video fills the frame. Logo fades in top, then copy slides up from the bottom over a gradient scrim. CTA glows on arrival.<br><strong>Headline updated to "ChemTec is Back In Town"</strong></p>
+
+  <div class="ratio-row">
+
+    <!-- 1:1 (1080x1080) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:300px; height:300px;">
+        <div class="mock-bg-video mock-bg-video-full"><video src="/ad-bg-video-b.mp4" muted loop autoplay playsinline></video></div>
+        <div class="mock-scrim-bottom"></div>
+        <div class="mock-inner" style="justify-content:space-between; padding:8% 8% 7%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" class="anim-fade-up" data-anim="b" data-delay="200" style="width:80px; opacity:0.9;">
+          <div style="text-align:center; width:100%; margin-top:auto;">
+            <p class="mock-headline anim-slide-up" data-anim="b" data-delay="600" style="font-size:20px; margin-bottom:5px; text-shadow:0 2px 20px rgba(0,0,0,0.7);">ChemTec is Back<br>In Town</p>
+            <p class="mock-subhead anim-slide-up" data-anim="b" data-delay="900" style="font-size:9px; margin-bottom:10px; text-shadow:0 1px 10px rgba(0,0,0,0.6);">The pros' choice for epoxy. In stock now.</p>
+            <a class="mock-cta anim-slide-up anim-cta-pulse" data-anim="b" data-delay="1200" style="font-size:10px; padding:7px 18px;">Get a Free Quote</a>
+            <p class="mock-phone anim-slide-up" data-anim="b" data-delay="1500" style="font-size:8px; margin-top:6px;">CO 970-405-5043 &nbsp;|&nbsp; NM 505-615-5262</p>
+          </div>
+        </div>
+      </div>
+      <span class="ratio-label">1:1 &mdash; 1080 &times; 1080</span>
+    </div>
+
+    <!-- 9:16 (1080x1920) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:225px; height:400px;">
+        <div class="safe-zone-top"></div>
+        <div class="safe-zone-bottom"></div>
+        <div class="mock-bg-video mock-bg-video-full"><video src="/ad-bg-video-b.mp4" muted loop autoplay playsinline></video></div>
+        <div class="mock-scrim-bottom" style="height:55%;"></div>
+        <div class="mock-inner" style="justify-content:space-between; padding:16% 7% 22%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" class="anim-fade-up" data-anim="b" data-delay="200" style="width:75px; opacity:0.9;">
+          <div style="text-align:center; width:100%; margin-top:auto;">
+            <p class="mock-headline anim-slide-up" data-anim="b" data-delay="600" style="font-size:20px; margin-bottom:5px; text-shadow:0 2px 20px rgba(0,0,0,0.7);">ChemTec is Back<br>In Town</p>
+            <p class="mock-subhead anim-slide-up" data-anim="b" data-delay="900" style="font-size:8px; margin-bottom:10px; text-shadow:0 1px 10px rgba(0,0,0,0.6);">The pros' choice for epoxy.<br>In stock now.</p>
+            <a class="mock-cta anim-slide-up anim-cta-pulse" data-anim="b" data-delay="1200" style="font-size:9px; padding:7px 18px;">Get a Free Quote</a>
+            <p class="mock-phone anim-slide-up" data-anim="b" data-delay="1500" style="font-size:7px; margin-top:6px;">CO 970-405-5043<br>NM 505-615-5262</p>
+          </div>
+        </div>
+      </div>
+      <span class="ratio-label">9:16 &mdash; 1080 &times; 1920</span>
+    </div>
+
+    <!-- 1.91:1 (1200x628) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:400px; height:209px;">
+        <div class="mock-bg-video mock-bg-video-full"><video src="/ad-bg-video-b.mp4" muted loop autoplay playsinline></video></div>
+        <div class="mock-scrim-bottom"></div>
+        <div class="mock-inner" style="justify-content:space-between; padding:7% 6%;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+            <img src="/logo-white.svg" alt="Legacy Epoxy" class="anim-fade-up" data-anim="b" data-delay="200" style="width:70px; opacity:0.9;">
+          </div>
+          <div style="text-align:center; width:100%; margin-top:auto;">
+            <p class="mock-headline anim-slide-up" data-anim="b" data-delay="600" style="font-size:18px; margin-bottom:4px; text-shadow:0 2px 20px rgba(0,0,0,0.7);">ChemTec is Back In Town</p>
+            <p class="mock-subhead anim-slide-up" data-anim="b" data-delay="900" style="font-size:8px; margin-bottom:8px; text-shadow:0 1px 10px rgba(0,0,0,0.6);">The pros' choice for epoxy. In stock now.</p>
+            <a class="mock-cta anim-slide-up anim-cta-pulse" data-anim="b" data-delay="1200" style="font-size:9px; padding:6px 16px;">Get a Free Quote</a>
+            <span class="mock-phone anim-slide-up" data-anim="b" data-delay="1500" style="font-size:7px; margin-left:8px;">970-405-5043</span>
+          </div>
+        </div>
+      </div>
+      <span class="ratio-label">1.91:1 &mdash; 1200 &times; 628</span>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     PROJECT 2: NEW GOOGLE ADS CAMPAIGN — Static Images
+     2 ads: Garage Floor + Walkway
+     Messaging: Get Your DIY Epoxy Kits
+     Destination: floors.legacyepoxysupply.com
+     Sizes: 4:5 (1200x1500), 9:16 (1080x1920), 1.91:1 (1200x628)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="project-section">
+  <div class="project-header">
+    <h2 class="project-label">New Google Ads Campaign</h2>
+    <span class="project-tag">Static</span>
+  </div>
+  <p class="project-description">Two static image ads for Google Ads &mdash; one featuring the garage floor, one featuring the walkway. Residential audience targeting epoxy garages, basements, sidewalks, pool decks.<br><strong>Destination:</strong> floors.legacyepoxysupply.com</p>
+
+  <!-- ── Ad 1: Garage Floor ── -->
+  <h3 class="ad-group-label">Ad 1: Garage Floor</h3>
+  <div class="ratio-row" style="margin-bottom:40px;">
+
+    <!-- 4:5 (1200x1500) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:300px; height:375px;" data-output-w="1200" data-output-h="1500" data-ad-name="garage-4x5">
+        <div class="static-ad-bg" style="background-image:url('/images/gallery-garage.webp')"></div>
+        <div class="static-ad-overlay"></div>
+        <div class="static-ad-inner" style="padding:10% 8% 8%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" class="ad-logo" style="width:75px;">
+          <span class="static-ad-surface" style="font-size:10px;">Garage Floors</span>
+          <p class="static-ad-headline" style="font-size:24px;">High-gloss. Hot-tire proof.<br><span style="color:#E8631A; font-style:italic;">Built to impress.</span></p>
+          <p class="static-ad-sub" style="font-size:10px;">The classic epoxy surface that outlasts everything.</p>
+          <a class="static-ad-cta" style="font-size:11px; padding:8px 22px;">Get a Free Quote</a>
+          <span class="static-ad-url">floors.legacyepoxysupply.com</span>
+        </div>
+      </div>
+      <span class="ratio-label">4:5 &mdash; 1200 &times; 1500</span>
+    </div>
+
+    <!-- 9:16 (1080x1920) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:225px; height:400px;" data-output-w="1080" data-output-h="1920" data-ad-name="garage-9x16">
+        <div class="safe-zone-top"></div>
+        <div class="safe-zone-bottom"></div>
+        <div class="static-ad-bg" style="background-image:url('/images/gallery-garage.webp')"></div>
+        <div class="static-ad-overlay"></div>
+        <div class="static-ad-inner" style="padding:18% 6% 22%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" class="ad-logo" style="width:65px; top:16%;">
+          <span class="static-ad-surface" style="font-size:8px;">Garage Floors</span>
+          <p class="static-ad-headline" style="font-size:19px;">High-gloss.<br>Hot-tire proof.<br><span style="color:#E8631A; font-style:italic;">Built to impress.</span></p>
+          <p class="static-ad-sub" style="font-size:8px;">The classic epoxy surface.</p>
+          <a class="static-ad-cta" style="font-size:9px; padding:6px 16px;">Get a Free Quote</a>
+          <span class="static-ad-url">floors.legacyepoxysupply.com</span>
+        </div>
+      </div>
+      <span class="ratio-label">9:16 &mdash; 1080 &times; 1920</span>
+    </div>
+
+    <!-- 1.91:1 (1200x628) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:400px; height:209px;" data-output-w="1200" data-output-h="628" data-ad-name="garage-191x1">
+        <div class="static-ad-bg" style="background-image:url('/images/gallery-garage.webp')"></div>
+        <div class="static-ad-overlay" style="background: linear-gradient(to left, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.2) 100%);"></div>
+        <div class="static-ad-inner" style="flex-direction:row; align-items:center; justify-content:flex-end; padding:6%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:60px; opacity:0.9; position:absolute; top:10%; left:6%;">
+          <div style="text-align:right; max-width:55%;">
+            <span class="static-ad-surface" style="font-size:8px;">Garage Floors</span>
+            <p class="static-ad-headline" style="font-size:17px; text-align:right;">High-gloss.<br><span style="color:#E8631A; font-style:italic;">Built to impress.</span></p>
+            <p class="static-ad-sub" style="font-size:8px; text-align:right; margin-bottom:8px;">The classic epoxy surface.</p>
+            <a class="static-ad-cta" style="font-size:9px; padding:6px 14px;">Get a Free Quote</a>
+          </div>
+        </div>
+      </div>
+      <span class="ratio-label">1.91:1 &mdash; 1200 &times; 628</span>
+    </div>
+
+  </div>
+
+  <!-- ── Ad 2: Walkway ── -->
+  <h3 class="ad-group-label">Ad 2: Walkway</h3>
+  <div class="ratio-row">
+
+    <!-- 4:5 (1200x1500) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:300px; height:375px;" data-output-w="1200" data-output-h="1500" data-ad-name="walkway-4x5">
+        <div class="static-ad-bg" style="background-image:url('/images/gallery-sidewalk.webp')"></div>
+        <div class="static-ad-overlay"></div>
+        <div class="static-ad-inner" style="padding:10% 8% 8%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" class="ad-logo" style="width:75px;">
+          <span class="static-ad-surface" style="font-size:10px;">Walkways</span>
+          <p class="static-ad-headline" style="font-size:24px;">Curb appeal<br><span style="color:#E8631A; font-style:italic;">that lasts.</span></p>
+          <p class="static-ad-sub" style="font-size:10px;">Seal and protect every walkway and path.</p>
+          <a class="static-ad-cta" style="font-size:11px; padding:8px 22px;">Get a Free Quote</a>
+          <span class="static-ad-url">floors.legacyepoxysupply.com</span>
+        </div>
+      </div>
+      <span class="ratio-label">4:5 &mdash; 1200 &times; 1500</span>
+    </div>
+
+    <!-- 9:16 (1080x1920) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:225px; height:400px;" data-output-w="1080" data-output-h="1920" data-ad-name="walkway-9x16">
+        <div class="safe-zone-top"></div>
+        <div class="safe-zone-bottom"></div>
+        <div class="static-ad-bg" style="background-image:url('/images/gallery-sidewalk.webp')"></div>
+        <div class="static-ad-overlay"></div>
+        <div class="static-ad-inner" style="padding:18% 6% 22%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" class="ad-logo" style="width:65px; top:16%;">
+          <span class="static-ad-surface" style="font-size:8px;">Walkways</span>
+          <p class="static-ad-headline" style="font-size:19px;">Curb appeal<br><span style="color:#E8631A; font-style:italic;">that lasts.</span></p>
+          <p class="static-ad-sub" style="font-size:8px;">Seal and protect every path.</p>
+          <a class="static-ad-cta" style="font-size:9px; padding:6px 16px;">Get a Free Quote</a>
+          <span class="static-ad-url">floors.legacyepoxysupply.com</span>
+        </div>
+      </div>
+      <span class="ratio-label">9:16 &mdash; 1080 &times; 1920</span>
+    </div>
+
+    <!-- 1.91:1 (1200x628) -->
+    <div class="ratio-col">
+      <div class="mock-frame" style="width:400px; height:209px;" data-output-w="1200" data-output-h="628" data-ad-name="walkway-191x1">
+        <div class="static-ad-bg" style="background-image:url('/images/gallery-sidewalk.webp')"></div>
+        <div class="static-ad-overlay" style="background: linear-gradient(to left, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.2) 100%);"></div>
+        <div class="static-ad-inner" style="flex-direction:row; align-items:center; justify-content:flex-end; padding:6%;">
+          <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:60px; opacity:0.9; position:absolute; top:10%; left:6%;">
+          <div style="text-align:right; max-width:55%;">
+            <span class="static-ad-surface" style="font-size:8px;">Walkways</span>
+            <p class="static-ad-headline" style="font-size:17px; text-align:right;">Curb appeal<br><span style="color:#E8631A; font-style:italic;">that lasts.</span></p>
+            <p class="static-ad-sub" style="font-size:8px; text-align:right; margin-bottom:8px;">Seal and protect every path.</p>
+            <a class="static-ad-cta" style="font-size:9px; padding:6px 14px;">Get a Free Quote</a>
+          </div>
+        </div>
+      </div>
+      <span class="ratio-label">1.91:1 &mdash; 1200 &times; 628</span>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ARCHIVED: Concept C — Surface Showcase (motion slider)
+     Kept for potential future Meta campaign
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="archived-section">
+  <button class="archived-toggle" onclick="toggleArchived()">Show Archived: Concept C &mdash; Surface Showcase (Motion)</button>
+  <div class="archived-content" id="archived-content">
+    <section class="project-section" data-concept="c" style="border:none; padding:0;">
+      <div class="project-header">
+        <h2 class="project-label">Concept C: Surface Showcase</h2>
+        <span class="project-tag" style="background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); border-color:rgba(255,255,255,0.1);">Archived</span>
+        <button class="btn-replay" onclick="replayConceptC()">Replay</button>
+      </div>
+      <p class="project-description">Auto-cycling slider through four surface types. Saved for potential future Meta campaign if budget allows.</p>
+
+      <div class="ratio-row">
+
+        <!-- 1:1 -->
+        <div class="ratio-col">
+          <div class="mock-frame slide-frame mock-frame-c" style="width:300px; height:300px;">
+            <div class="slide slide-active" data-slide="0">
+              <div class="slide-bg" style="background-image:url('/images/gallery-garage.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:10% 8% 9%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:70px; opacity:0.85; position:absolute; top:10%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label">Garage Floors</span>
+                <p class="slide-headline" style="font-size:20px;">High-gloss. Hot-tire proof.<br><span style="color:#E8631A; font-style:italic;">Built to impress.</span></p>
+                <p class="slide-desc">The classic epoxy surface that outlasts everything.</p>
+                <a class="slide-cta" style="font-size:10px; padding:7px 18px; margin-top:10px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:10px;">
+                  <span class="slide-dot dot-active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="1">
+              <div class="slide-bg" style="background-image:url('/images/gallery-pool-deck.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:10% 8% 9%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:70px; opacity:0.85; position:absolute; top:10%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label">Pool Decks</span>
+                <p class="slide-headline" style="font-size:20px;">Slip-resistant. UV-stable.<br><span style="color:#E8631A; font-style:italic;">Beautiful by the water.</span></p>
+                <p class="slide-desc">Safe, stunning surfaces around every pool.</p>
+                <a class="slide-cta" style="font-size:10px; padding:7px 18px; margin-top:10px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:10px;">
+                  <span class="slide-dot"></span><span class="slide-dot dot-active"></span><span class="slide-dot"></span><span class="slide-dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="2">
+              <div class="slide-bg" style="background-image:url('/images/gallery-basement.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:10% 8% 9%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:70px; opacity:0.85; position:absolute; top:10%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label">Basements</span>
+                <p class="slide-headline" style="font-size:20px;">Cold concrete &rarr;<br><span style="color:#E8631A; font-style:italic;">Finished living space.</span></p>
+                <p class="slide-desc">Transform any basement into a polished room.</p>
+                <a class="slide-cta" style="font-size:10px; padding:7px 18px; margin-top:10px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:10px;">
+                  <span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot dot-active"></span><span class="slide-dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="3">
+              <div class="slide-bg" style="background-image:url('/images/gallery-sidewalk.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:10% 8% 9%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:70px; opacity:0.85; position:absolute; top:10%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label">Walkways</span>
+                <p class="slide-headline" style="font-size:20px;">Curb appeal<br><span style="color:#E8631A; font-style:italic;">that lasts.</span></p>
+                <p class="slide-desc">Seal and protect every walkway and path.</p>
+                <a class="slide-cta" style="font-size:10px; padding:7px 18px; margin-top:10px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:10px;">
+                  <span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot dot-active"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="ratio-label">1:1 &mdash; 1200 &times; 1200</span>
+        </div>
+
+        <!-- 9:16 -->
+        <div class="ratio-col">
+          <div class="mock-frame slide-frame mock-frame-c" style="width:225px; height:400px;">
+            <div class="safe-zone-top"></div>
+            <div class="safe-zone-bottom"></div>
+            <div class="slide slide-active" data-slide="0">
+              <div class="slide-bg" style="background-image:url('/images/gallery-garage.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:18% 6% 22%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:65px; opacity:0.85; position:absolute; top:15%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label" style="font-size:8px;">Garage Floors</span>
+                <p class="slide-headline" style="font-size:18px;">High-gloss.<br>Hot-tire proof.<br><span style="color:#E8631A; font-style:italic;">Built to impress.</span></p>
+                <p class="slide-desc" style="font-size:8px;">The classic epoxy surface.</p>
+                <a class="slide-cta" style="font-size:9px; padding:6px 16px; margin-top:8px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:8px;">
+                  <span class="slide-dot dot-active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="1">
+              <div class="slide-bg" style="background-image:url('/images/gallery-pool-deck.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:18% 6% 22%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:65px; opacity:0.85; position:absolute; top:15%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label" style="font-size:8px;">Pool Decks</span>
+                <p class="slide-headline" style="font-size:18px;">Slip-resistant.<br>UV-stable.<br><span style="color:#E8631A; font-style:italic;">Beautiful by the water.</span></p>
+                <p class="slide-desc" style="font-size:8px;">Safe surfaces around every pool.</p>
+                <a class="slide-cta" style="font-size:9px; padding:6px 16px; margin-top:8px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:8px;">
+                  <span class="slide-dot"></span><span class="slide-dot dot-active"></span><span class="slide-dot"></span><span class="slide-dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="2">
+              <div class="slide-bg" style="background-image:url('/images/gallery-basement.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:18% 6% 22%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:65px; opacity:0.85; position:absolute; top:15%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label" style="font-size:8px;">Basements</span>
+                <p class="slide-headline" style="font-size:18px;">Cold concrete &rarr;<br><span style="color:#E8631A; font-style:italic;">Finished living<br>space.</span></p>
+                <p class="slide-desc" style="font-size:8px;">Transform any basement.</p>
+                <a class="slide-cta" style="font-size:9px; padding:6px 16px; margin-top:8px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:8px;">
+                  <span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot dot-active"></span><span class="slide-dot"></span>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="3">
+              <div class="slide-bg" style="background-image:url('/images/gallery-sidewalk.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:18% 6% 22%;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:65px; opacity:0.85; position:absolute; top:15%; left:50%; transform:translateX(-50%);">
+                <span class="slide-surface-label" style="font-size:8px;">Walkways</span>
+                <p class="slide-headline" style="font-size:18px;">Curb appeal<br><span style="color:#E8631A; font-style:italic;">that lasts.</span></p>
+                <p class="slide-desc" style="font-size:8px;">Seal and protect every path.</p>
+                <a class="slide-cta" style="font-size:9px; padding:6px 16px; margin-top:8px;">Get a Free Quote</a>
+                <div class="slide-dots" style="margin-top:8px;">
+                  <span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot dot-active"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="ratio-label">9:16 &mdash; 1080 &times; 1920</span>
+        </div>
+
+        <!-- 1.91:1 -->
+        <div class="ratio-col">
+          <div class="mock-frame slide-frame mock-frame-c" style="width:400px; height:209px;">
+            <div class="slide slide-active" data-slide="0">
+              <div class="slide-bg" style="background-image:url('/images/gallery-garage.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:5% 6%; flex-direction:row; align-items:center; justify-content:flex-start;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:60px; opacity:0.85; position:absolute; top:8%; left:6%;">
+                <div style="margin-left:auto; text-align:right; max-width:60%;">
+                  <span class="slide-surface-label" style="font-size:8px;">Garage Floors</span>
+                  <p class="slide-headline" style="font-size:17px; text-align:right;">High-gloss.<br><span style="color:#E8631A; font-style:italic;">Built to impress.</span></p>
+                  <a class="slide-cta" style="font-size:9px; padding:6px 14px; margin-top:6px;">Get a Free Quote</a>
+                  <div class="slide-dots" style="margin-top:6px; justify-content:flex-end;">
+                    <span class="slide-dot dot-active"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="1">
+              <div class="slide-bg" style="background-image:url('/images/gallery-pool-deck.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:5% 6%; flex-direction:row; align-items:center; justify-content:flex-start;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:60px; opacity:0.85; position:absolute; top:8%; left:6%;">
+                <div style="margin-left:auto; text-align:right; max-width:60%;">
+                  <span class="slide-surface-label" style="font-size:8px;">Pool Decks</span>
+                  <p class="slide-headline" style="font-size:17px; text-align:right;">Slip-resistant.<br><span style="color:#E8631A; font-style:italic;">Beautiful by the water.</span></p>
+                  <a class="slide-cta" style="font-size:9px; padding:6px 14px; margin-top:6px;">Get a Free Quote</a>
+                  <div class="slide-dots" style="margin-top:6px; justify-content:flex-end;">
+                    <span class="slide-dot"></span><span class="slide-dot dot-active"></span><span class="slide-dot"></span><span class="slide-dot"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="2">
+              <div class="slide-bg" style="background-image:url('/images/gallery-basement.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:5% 6%; flex-direction:row; align-items:center; justify-content:flex-start;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:60px; opacity:0.85; position:absolute; top:8%; left:6%;">
+                <div style="margin-left:auto; text-align:right; max-width:60%;">
+                  <span class="slide-surface-label" style="font-size:8px;">Basements</span>
+                  <p class="slide-headline" style="font-size:17px; text-align:right;">Cold concrete &rarr;<br><span style="color:#E8631A; font-style:italic;">Finished living space.</span></p>
+                  <a class="slide-cta" style="font-size:9px; padding:6px 14px; margin-top:6px;">Get a Free Quote</a>
+                  <div class="slide-dots" style="margin-top:6px; justify-content:flex-end;">
+                    <span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot dot-active"></span><span class="slide-dot"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="slide" data-slide="3">
+              <div class="slide-bg" style="background-image:url('/images/gallery-sidewalk.webp')"></div>
+              <div class="slide-overlay"></div>
+              <div class="slide-content" style="padding:5% 6%; flex-direction:row; align-items:center; justify-content:flex-start;">
+                <img src="/logo-white.svg" alt="Legacy Epoxy" style="width:60px; opacity:0.85; position:absolute; top:8%; left:6%;">
+                <div style="margin-left:auto; text-align:right; max-width:60%;">
+                  <span class="slide-surface-label" style="font-size:8px;">Walkways</span>
+                  <p class="slide-headline" style="font-size:17px; text-align:right;">Curb appeal<br><span style="color:#E8631A; font-style:italic;">that lasts.</span></p>
+                  <a class="slide-cta" style="font-size:9px; padding:6px 14px; margin-top:6px;">Get a Free Quote</a>
+                  <div class="slide-dots" style="margin-top:6px; justify-content:flex-end;">
+                    <span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot"></span><span class="slide-dot dot-active"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <span class="ratio-label">1.91:1 &mdash; 1200 &times; 628</span>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</div>
+
+
+<!-- Isolation overlay for screen recording -->
+<div id="isolate-overlay" class="isolate-overlay">
+  <button class="isolate-close" onclick="closeIsolate()">Close &times;</button>
+  <div id="isolate-container"></div>
+  <p class="isolate-hint">Screen record this frame at full size. Press Close or Esc to return.</p>
+</div>
+
+<script>
+  // ── Archived toggle ──
+  function toggleArchived() {
+    var content = document.getElementById('archived-content');
+    var btn = content.previousElementSibling;
+    content.classList.toggle('open');
+    if (content.classList.contains('open')) {
+      btn.textContent = 'Hide Archived: Concept C \u2014 Surface Showcase (Motion)';
+      // Start slider when opened
+      setTimeout(function() { runConceptCSlider(); }, 300);
+    } else {
+      btn.textContent = 'Show Archived: Concept C \u2014 Surface Showcase (Motion)';
+      clearConceptCTimers();
+    }
+  }
+
+  // ── Isolate mode ──
+  function isolateAd(btn) {
+    var frame = btn.closest('.mock-frame');
+    var overlay = document.getElementById('isolate-overlay');
+    var container = document.getElementById('isolate-container');
+    var clone = frame.cloneNode(true);
+    var cloneBtn = clone.querySelector('.btn-isolate');
+    if (cloneBtn) cloneBtn.remove();
+
+    // Determine the real output aspect ratio from the thumbnail
+    var thumbW = parseInt(frame.style.width);
+    var thumbH = parseInt(frame.style.height);
+    var aspect = thumbW / thumbH;
+
+    // Scale to fill viewport as large as possible
+    var vw = window.innerWidth;
+    var vh = window.innerHeight - 80; // leave room for close btn + hint
+    var finalW, finalH;
+    if (aspect >= vw / vh) {
+      // width-constrained
+      finalW = vw;
+      finalH = vw / aspect;
+    } else {
+      // height-constrained
+      finalH = vh;
+      finalW = vh * aspect;
+    }
+
+    clone.style.width = Math.round(finalW) + 'px';
+    clone.style.height = Math.round(finalH) + 'px';
+    clone.style.border = 'none';
+    clone.style.borderRadius = '0';
+    container.innerHTML = '';
+    container.appendChild(clone);
+    overlay.classList.add('active');
+    clone.querySelectorAll('video').forEach(function(v) { v.play().catch(function(){}); });
+    clone.querySelectorAll('[data-anim]').forEach(function(el) {
+      el.classList.remove('active');
+      void el.offsetWidth;
+      var delay = parseInt(el.getAttribute('data-delay') || '0', 10);
+      setTimeout(function() { el.classList.add('active'); }, delay);
+    });
+  }
+
+  function closeIsolate() {
+    var overlay = document.getElementById('isolate-overlay');
+    overlay.classList.remove('active');
+    document.getElementById('isolate-container').innerHTML = '';
+  }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeIsolate();
+  });
+
+  // Inject "Record" buttons (motion ads) and "Download" buttons (static ads)
+  document.querySelectorAll('.mock-frame').forEach(function(frame) {
+    var isStatic = frame.hasAttribute('data-output-w');
+
+    if (isStatic) {
+      // Download button for static ads
+      var dlBtn = document.createElement('button');
+      dlBtn.className = 'btn-download';
+      dlBtn.innerHTML = '\u2B07 Download PNG';
+      dlBtn.onclick = function() { downloadAd(this); };
+      frame.appendChild(dlBtn);
+    }
+
+    // Record button for all ads
+    var btn = document.createElement('button');
+    btn.className = 'btn-isolate';
+    btn.textContent = 'Record';
+    btn.onclick = function() { isolateAd(this); };
+    frame.appendChild(btn);
+  });
+
+  // ── Download static ad as PNG at full output resolution ──
+  function downloadAd(btn) {
+    var frame = btn.closest('.mock-frame');
+    var outputW = parseInt(frame.getAttribute('data-output-w'));
+    var outputH = parseInt(frame.getAttribute('data-output-h'));
+    var adName = frame.getAttribute('data-ad-name') || 'ad';
+    var thumbW = parseInt(frame.style.width);
+    var scale = outputW / thumbW;
+
+    btn.innerHTML = 'Rendering...';
+    btn.classList.add('downloading');
+
+    // Hide safe-zone overlays and download button for capture
+    var safeZones = frame.querySelectorAll('.safe-zone-top, .safe-zone-bottom');
+    safeZones.forEach(function(sz) { sz.style.display = 'none'; });
+    btn.style.display = 'none';
+    var recBtn = frame.querySelector('.btn-isolate');
+    if (recBtn) recBtn.style.display = 'none';
+
+    html2canvas(frame, {
+      scale: scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#000000',
+      width: thumbW,
+      height: parseInt(frame.style.height),
+      logging: false
+    }).then(function(canvas) {
+      // Restore hidden elements
+      safeZones.forEach(function(sz) { sz.style.display = ''; });
+      btn.style.display = '';
+      if (recBtn) recBtn.style.display = '';
+      btn.innerHTML = '\u2B07 Download PNG';
+      btn.classList.remove('downloading');
+
+      // Trigger download
+      var link = document.createElement('a');
+      link.download = 'legacy-epoxy-' + adName + '-' + outputW + 'x' + outputH + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(function(err) {
+      console.error('Download failed:', err);
+      safeZones.forEach(function(sz) { sz.style.display = ''; });
+      btn.style.display = '';
+      if (recBtn) recBtn.style.display = '';
+      btn.innerHTML = '\u2B07 Download PNG';
+      btn.classList.remove('downloading');
+      alert('Download failed. Try using the Record button instead.');
+    });
+  }
+
+  // ── Concept B: simple stagger animation ──
+  function runConcept(conceptId) {
+    var els = document.querySelectorAll('[data-anim="' + conceptId + '"]');
+    els.forEach(function(el) {
+      el.classList.remove('active');
+      void el.offsetWidth;
+    });
+    els.forEach(function(el) {
+      var delay = parseInt(el.getAttribute('data-delay') || '0', 10);
+      setTimeout(function() { el.classList.add('active'); }, delay);
+    });
+  }
+
+  function replayConceptB() { runConcept('b'); }
+
+  // ── Concept C: Surface Slider (archived) ──
+  var conceptCIntervals = [];
+
+  function clearConceptCTimers() {
+    conceptCIntervals.forEach(clearInterval);
+    conceptCIntervals = [];
+  }
+
+  function runConceptCSlider() {
+    clearConceptCTimers();
+    var frames = document.querySelectorAll('.mock-frame-c');
+    frames.forEach(function(frame) {
+      var slides = frame.querySelectorAll('.slide');
+      var total = slides.length;
+      var current = 0;
+
+      slides.forEach(function(s) { s.classList.remove('slide-active'); });
+      slides[0].classList.add('slide-active');
+
+      var interval = setInterval(function() {
+        slides[current].classList.remove('slide-active');
+        var oldBg = slides[current].querySelector('.slide-bg');
+        if (oldBg) { oldBg.style.transform = 'scale(1.05)'; }
+        current = (current + 1) % total;
+        slides[current].classList.add('slide-active');
+      }, 3500);
+
+      conceptCIntervals.push(interval);
+    });
+  }
+
+  function replayConceptC() { runConceptCSlider(); }
+
+  // ── Auto-play on scroll into view ──
+  var played = { b: false };
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var id = entry.target.getAttribute('data-concept');
+        if (id && !played[id]) {
+          played[id] = true;
+          if (id === 'b') setTimeout(function() { runConcept('b'); }, 200);
+        }
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('[data-concept]').forEach(function(section) {
+    observer.observe(section);
+  });
+
+  // Safety fallback
+  setTimeout(function() {
+    if (!played.b) { played.b = true; runConcept('b'); }
+  }, 3000);
+</script>
+
+</body>
+</html>
