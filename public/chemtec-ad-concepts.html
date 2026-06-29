@@ -770,22 +770,26 @@
     var thumbH = parseInt(frame.style.height);
     var aspect = thumbW / thumbH;
 
-    // Scale to fill viewport as large as possible
+    // Scale to fill viewport as large as possible, using transform so text stays proportional
     var vw = window.innerWidth;
     var vh = window.innerHeight - 80; // leave room for close btn + hint
     var finalW, finalH;
     if (aspect >= vw / vh) {
-      // width-constrained
       finalW = vw;
       finalH = vw / aspect;
     } else {
-      // height-constrained
       finalH = vh;
       finalW = vh * aspect;
     }
 
-    clone.style.width = Math.round(finalW) + 'px';
-    clone.style.height = Math.round(finalH) + 'px';
+    var scaleX = finalW / thumbW;
+    var scaleY = finalH / thumbH;
+    var scaleFactor = Math.min(scaleX, scaleY);
+
+    clone.style.width = thumbW + 'px';
+    clone.style.height = thumbH + 'px';
+    clone.style.transform = 'scale(' + scaleFactor + ')';
+    clone.style.transformOrigin = 'center center';
     clone.style.border = 'none';
     clone.style.borderRadius = '0';
     container.innerHTML = '';
